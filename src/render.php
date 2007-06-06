@@ -382,8 +382,7 @@ function render_serve($method, &$request, &$template)
     $server =& getServer();
 
     $http_request = $request;
-    $request = Auth_OpenID::fixArgs($request);
-    $request = $server->decodeRequest($request);
+    $request = $server->decodeRequest();
 
     if (!$request) {
         Server_redirect(getServerURL());

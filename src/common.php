@@ -254,8 +254,6 @@ function Server_requestSregData($request)
     $required = array();
     $policy_url = null;
 
-    $request = Auth_OpenID::fixArgs($request);
-
     if (array_key_exists('openid.sreg.required', $request)) {
         $required = explode(",", $request['openid.sreg.required']);
     }
@@ -298,7 +296,7 @@ function addSregData($account, &$response, $allowed_fields = null)
         }
     }
 
-    $response->addFields('sreg', $data);    
+    // $response->addFields('sreg', $data);    
 }
 
 /**
