@@ -306,7 +306,7 @@ class Template extends Smarty {
     function Template()
     {
         $this->template_dir = PHP_SERVER_PATH . 'templates';
-        $this->compile_dir = PHP_SERVER_PATH . 'templates_c';
+        $this->compile_dir = PHP_SERVER_PATH . 'templates/templates_c';
         $this->errors = array();
         $this->messages = array();
     }
