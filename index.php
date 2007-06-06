@@ -3,10 +3,9 @@
 /**
  * The user-facing portion of the PHP OpenID Server.
  */
-session_start();
 
-require_once "config.php";
-require_once "common.php";
+
+require_once('OpenIDServer.class.php');
 
 // Create a page template.
 $template =& new Template();
@@ -15,8 +14,9 @@ $template =& new Template();
 list($method, $request) = Server_getRequest();
 
 // Initialize backends.
-$auth =& Server_getAuthBackend();
-$storage =& Server_getStorageBackend();
+$server = new OpenIDServer();
+$auth =& $server->auth_backend;
+$storage =& $server->storage_backend;
 
 if ($auth === null) {
     $template->addError("Could not connect to authentication server.");

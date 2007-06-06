@@ -5,8 +5,8 @@ define('PHP_SERVER_PATH', dirname(__FILE__)."/");
 
 require_once "config.php";
 require_once "handlers.php";
-require_once "auth.php";
-require_once "storage.php";
+require_once('AuthBackend.class.php');
+require_once('StorageBackend.class.php');
 
 
 set_include_path(get_include_path() . PATH_SEPARATOR . 'libs/');
@@ -66,37 +66,6 @@ class Template extends Smarty
 
 
 
-global $__storage_backend, $__auth_backend, $__openid_store;
-
-function &Server_getAuthBackend()
-{
-    global $__auth_backend, $auth_parameters;
-
-    if (!$__auth_backend) {
-        // Try to instantiate auth backend class from settings.
-        $cls = 'AuthBackend_' . AUTH_BACKEND;
-        $__auth_backend = new $cls();
-        if (!$__auth_backend->connect($auth_parameters)) {
-            return null;
-        }
-    }
-    return $__auth_backend;
-}
-
-function &Server_getStorageBackend()
-{
-    global $__storage_backend, $storage_parameters;
-
-    if (!$__storage_backend) {
-        // Try to instantiate storage backend class from settings.
-        $cls = 'Storage_' . STORAGE_BACKEND;
-        $__storage_backend = new $cls();
-        if (!$__storage_backend->connect($storage_parameters)) {
-            return null;
-        }
-    }
-    return $__storage_backend;
-}
 
 function &Server_getOpenIDStore()
 {

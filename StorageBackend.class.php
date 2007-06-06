@@ -1,7 +1,6 @@
 <?php
 
-require_once "DB.php";
-require_once "backends.php";
+require_once('Backend.class.php');
 require_once "constants.php";
 
 class Storage_MYSQL extends Backend_MYSQL {
