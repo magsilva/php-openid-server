@@ -7,7 +7,7 @@
 
 require_once "common.php";
 require_once "constants.php";
-require_once "captcha.php";
+require_once('Captcha.class.php');
 
 function render_login($method, &$request, &$template)
 {
@@ -249,8 +249,10 @@ function render_register($method, &$request, &$template)
 
 function render_captcha($method, &$request, &$template)
 {
+	$captcha = new Captcha();
+
     // Render a captcha image and store the hash.  See register.tpl.
-    $hash = generateCaptcha(PHP_SERVER_PATH . "/src/fonts/FreeSans.ttf", 6);
+    $hash = $captcha->generateCaptcha(6);
 
     // Put the captcha hash into the session so it can be checked.
     $_SESSION['hash'] = $hash;

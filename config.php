@@ -5,13 +5,6 @@
  */
 
 /**
- * The location of the Smarty templating system; set this to the
- * directory that contains Smarty.class.php.  Must end in a trailing
- * slash.
- */
-define('SMARTY_DIR', realpath('.') . '/libs/smarty/libs/');
-
-/**
  * The site title; this will appear at the top and bottom of each
  * page, as well as in the browser title bar.
  */

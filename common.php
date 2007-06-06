@@ -1,19 +1,70 @@
 <?php
 
+define('PHP_SERVER_PATH', dirname(__FILE__)."/");
+
+
 require_once "config.php";
 require_once "handlers.php";
 require_once "auth.php";
 require_once "storage.php";
 
-require_once "Auth/OpenID/Server.php";
-require_once "Auth/OpenID/MySQLStore.php";
 
-define('PHP_SERVER_PATH', dirname(dirname(__FILE__))."/");
+set_include_path(get_include_path() . PATH_SEPARATOR . 'libs/');
+require_once('Auth/OpenID/Server.php');
+require_once('Auth/OpenID/MySQLStore.php');
 
 /**
  * Require the Smarty template core.
  */
-require_once(SMARTY_DIR . '/Smarty.class.php');
+require_once('smarty/libs/Smarty.class.php');
+
+/**
+ * The Smarty template class used by this application.
+ */
+class Template extends Smarty
+{
+    function Template()
+    {
+        $this->template_dir = PHP_SERVER_PATH . 'templates';
+        $this->compile_dir = PHP_SERVER_PATH . 'templates/templates_c';
+        $this->errors = array();
+        $this->messages = array();
+    }
+
+    function addError($str)
+    {
+        $this->errors[] = $str;
+    }
+
+    function addMessage($str)
+    {
+        $this->messages[] = $str;
+    }
+
+    function display($filename = null, $template_override = false)
+    {
+        $this->assign('errors', $this->errors);
+        $this->assign('messages', $this->messages);
+        $this->assign('SERVER_URL', getServerURL());
+        $this->assign('SITE_TITLE', SITE_TITLE);
+        $this->assign('ADMIN', isset($_SESSION['admin']));
+        $this->assign('SITE_ADMIN_EMAIL', SITE_ADMIN_EMAIL);
+        $this->assign('ALLOW_PUBLIC_REGISTRATION', ALLOW_PUBLIC_REGISTRATION);
+        $this->assign('account', Server_getAccount());
+        $this->assign('account_openid_url', Server_getAccountIdentifier(Server_getAccount()));
+
+        if ($template_override && $filename) {
+            return parent::display($filename);
+        } else if (!$template_override) {
+            if ($filename) {
+                $this->assign('body', $this->fetch($filename));
+            }
+            return parent::display('index.tpl');
+        }
+    }
+}
+
+
 
 global $__storage_backend, $__auth_backend, $__openid_store;
 
@@ -299,51 +350,6 @@ function addSregData($account, &$response, $allowed_fields = null)
     // $response->addFields('sreg', $data);    
 }
 
-/**
- * The Smarty template class used by this application.
- */
-class Template extends Smarty {
-    function Template()
-    {
-        $this->template_dir = PHP_SERVER_PATH . 'templates';
-        $this->compile_dir = PHP_SERVER_PATH . 'templates/templates_c';
-        $this->errors = array();
-        $this->messages = array();
-    }
-
-    function addError($str)
-    {
-        $this->errors[] = $str;
-    }
-
-    function addMessage($str)
-    {
-        $this->messages[] = $str;
-    }
-
-    function display($filename = null, $template_override = false)
-    {
-        $this->assign('errors', $this->errors);
-        $this->assign('messages', $this->messages);
-        $this->assign('SERVER_URL', getServerURL());
-        $this->assign('SITE_TITLE', SITE_TITLE);
-        $this->assign('ADMIN', isset($_SESSION['admin']));
-        $this->assign('SITE_ADMIN_EMAIL', SITE_ADMIN_EMAIL);
-        $this->assign('ALLOW_PUBLIC_REGISTRATION', ALLOW_PUBLIC_REGISTRATION);
-        $this->assign('account', Server_getAccount());
-        $this->assign('account_openid_url', Server_getAccountIdentifier(Server_getAccount()));
-
-        if ($template_override && $filename) {
-            return parent::display($filename);
-        } else if (!$template_override) {
-            if ($filename) {
-                $this->assign('body', $this->fetch($filename));
-            }
-            return parent::display('index.tpl');
-        }
-    }
-}
-
 function Server_needAuth(&$request)
 {
     if (!Server_getAccount()) {
@@ -396,7 +402,7 @@ function getCountryName($code)
 // http://www.iso.org/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1-semic.txt
 global $country_codes;
 $country_codes = array(array("AF", "Afghanistan"),
-                       array("AX", "Åland islands"),
+                       array("AX", "ï¿½land islands"),
                        array("AL", "Albania"),
                        array("DZ", "Algeria"),
                        array("AS", "American Samoa"),

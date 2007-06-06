@@ -3,7 +3,6 @@
 /**
  * The user-facing portion of the PHP OpenID Server.
  */
-
 session_start();
 
 require_once "config.php";
