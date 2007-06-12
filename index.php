@@ -1,75 +1,40 @@
 <?php
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+ 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ 
+Copyright (C) 2005 JanRain, Inc.
+*/
 
-/**
- * The user-facing portion of the PHP OpenID Server.
- */
-
-
+require_once('Template.class.php');
 require_once('OpenIDServer.class.php');
+require_once('Controller.class.php');
 
-// Create a page template.
-$template =& new Template();
-
-// First, get the request data.
-list($method, $request) = Server_getRequest();
+$controller = new Controller();
 
 // Initialize backends.
 $server = new OpenIDServer();
-$auth =& $server->auth_backend;
-$storage =& $server->storage_backend;
+$auth = $server->auth_backend;
+$storage = $server->storage_backend;
 
-if ($auth === null) {
-    $template->addError("Could not connect to authentication server.");
-}
+// Create a page template.
+$template = new Template();
 
-if ($storage === null) {
-    $template->addError("Could not connect to OpenID storage server.");
-}
+set_error_handler(array($controller, 'handleError'));
 
-if (isset($_SERVER['PATH_INFO']) &&
-    $_SERVER['PATH_INFO'] == '/serve') {
-    require_once "render.php";
-    render_serve($method, $request, $template);
-    exit(0);
-// If it's a request for an identity URL, render that.
-} else if (array_key_exists('user', $request) &&
-    $request['user']) {
-    require_once "render.php";
-    render_identityPage($method, $request, $template);
-    exit(0);
-// If it's a request for a user's XRDS, render that.
-} else if (array_key_exists('xrds', $request) &&
-    $request['xrds']) {
-    require_once "render.php";
-    render_XRDS($method, $request, $template);
-    exit(0);
-}
 
-// If any messages are pending, get them and display them.
-$messages = Server_getMessages();
 
-foreach ($messages as $m) {
-    $template->addMessage($m);
-}
-
-Server_clearMessages();
-
-if ($request === null) {
-    // Error; $method not supported.
-    $template->addError("Request method $method not supported.");
-    $template->display();
-} else {
-    // Dispatch request to appropriate handler.
-    $handler = Server_getHandler($request);
-
-    if ($handler !== null) {
-        list($filename, $handler_function) = $handler;
-        require_once $filename;
-        call_user_func_array($handler_function,
-                             array($method, $request, $template));
-    } else {
-        $template->display('main.tpl');
-    }
-}
+$controller->processRequest();
 
 ?>

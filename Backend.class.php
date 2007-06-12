@@ -1,58 +1,97 @@
 <?php
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+ 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ 
+Copyright (C) 2005 JanRain, Inc.
+*/
+
+
 /**
- * Storage backend implementations.  PEAR DB is required to use these
- * storage backends.
+ * Storage backend implementations.
  */
-
-
+ 
+// File required from PEAR DB.
 require_once('DB.php');
 
-
+/**
+ * Data storage area. We don't worry, for now, about data creation and 
+ * retrieval. Our aim is just to define a standard way to connect to a
+ * data storage.
+ */
 class Backend
 {
-	function connect() {}
+	/**
+	 * Connect to the data storage area.
+	 * 
+	 * @param $parameters Array Parameters used to connect to the storage
+	 * area.
+	 */
+	function connect($parameters) {}
 }
 
+/**
+ * A data storage area implemented as a MySQL database.
+ */
 class Backend_MYSQL extends Backend
 {
+	/*
+	 * Connect to a MySQL database using PEAR DB.
+	 * 
+	 * @param $parameters Array Parameters used to connect to the storage
+	 * area. The expected array's keys are 'username' (name of the user
+	 * required to connect to the database), 'password' (the database user's
+	 * password), 'database' (the database name) and 'hostspec' (the
+	 * hostname or IP address of the database server).
+	 */
     function connect($parameters)
     {
         $this->database = $parameters['database'];
         $parameters['phptype'] = 'mysql';
         $this->db =& DB::connect($parameters);
 
-        if (!PEAR::isError($this->db)) {
+        if (! PEAR::isError($this->db)) {
             $this->db->setFetchMode(DB_FETCHMODE_ASSOC);
             $this->db->autoCommit(true);
-
-            if (PEAR::isError($this->db)) {
-                /*
-                 trigger_error("Could not connect to database '".
-                 $parameters['database'].
-                 "': " .
-                 $this->db->getMessage(),
-                 E_USER_ERROR);
-                */
-                return false;
+            if (! PEAR::isError($this->db)) {
+            	$this->_init();
+            	return true;
             }
-
-            $this->_init();
-        } else {
-            return false;
         }
-
-        return true;
+        
+        return false;
     }
 }
 
-
+/**
+ * A storage area implemented using a LDAP directory.
+ * 
+ * Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+ */
 class Backend_LDAP extends Backend
 {
-		/**
-	 * @param $principal_format String format for the credentials this
-	 * principal accepts.
-	 * $principal_format, $server_name, $base_dn, $bind_username = null,
-	 * $bind_password = null, $user_filter = '(uid=%USERNAME%)'
+	/**
+	 * Connect to a LDAP server.
+	 * 
+	 * @param $arguments Array Parameters used to connect to the storage area.
+	 * The expected array's keys are 'server_name' (the LDAP server hostname
+	 * or IP address), 'base_dn' (the root directory), 'bind_username' (user
+	 * to use when binding, the default is null), 'bind_password' (binding
+	 * user's password, the default is null), 'admin_username' (user to use
+	 * when creating or modifying user information), 'admin_password' (admin
+	 * user's password), 'user_filter' (format string used for searching users
+	 * within the LDAP repository, the default is '(uid=% USERNAME%)').
 	 */
 	function connect($arguments)
 	{				

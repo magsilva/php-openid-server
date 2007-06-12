@@ -1,9 +1,44 @@
 <?php
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+ 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ 
+Copyright (C) 2005 JanRain, Inc.
+*/
 
 require_once('Backend.class.php');
-require_once "constants.php";
+require_once('common.php');
 
-class Storage_MYSQL extends Backend_MYSQL {
+/**
+ * StorageBackend stores OpenID related data for each user.
+ */
+class StorageBackend
+{
+    function trustLog($account, $trust_root, $trusted) {}
+    function removeTrustLog($account, $trust_root) {}
+    function isTrusted($account, $trust_root) {}
+    function getSites($account) {}
+    function addIdentifier($account, $identifier) {}
+    function getAccountForUrl($identifier) {}
+    function getUrlsForAccount($account) {}
+    function removeAccount($account) {}
+    function savePersona($account, $profile_data) {}
+    function getPersona($account) {}
+}
+
+class Storage_MYSQL extends Backend_MYSQL
+{
     function _init()
     {
         $sreg_fields_sql = array('nickname VARCHAR(255)',
@@ -147,8 +182,7 @@ class Storage_MYSQL extends Backend_MYSQL {
         $pid = $this->db->getOne("SELECT id FROM personas WHERE account = ?",
                                  array($account));
 
-        if (PEAR::isError($pid) ||
-            !$pid) {
+        if (PEAR::isError($pid) || ! $pid) {
             $pid = $this->_createEmptyPersona($account);
         }
 
