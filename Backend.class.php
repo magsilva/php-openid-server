@@ -46,6 +46,10 @@ class Backend
  */
 class Backend_MYSQL extends Backend
 {
+	var $database;
+	
+	var $db;
+	
 	/*
 	 * Connect to a MySQL database using PEAR DB.
 	 * 
@@ -81,6 +85,25 @@ class Backend_MYSQL extends Backend
  */
 class Backend_LDAP extends Backend
 {
+	var $server_name;
+	
+	var $base_dn;
+	
+	var $min_uid_number;
+	
+	var $min_gid_number;
+	
+	var $user_filter;
+	
+	var $bind_username;
+	
+	var $bind_password;
+	
+	var $conn;
+	
+	var $priv_conn;	
+	
+
 	/**
 	 * Connect to a LDAP server.
 	 * 

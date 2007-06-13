@@ -24,7 +24,7 @@ require_once('Controller.class.php');
 $controller = new Controller();
 
 // Initialize backends.
-$server = new OpenIDServer();
+$server = new OpenIDServer(AUTH_BACKEND, $auth_parameters, STORAGE_BACKEND, $storage_parameters);
 $auth = $server->auth_backend;
 $storage = $server->storage_backend;
 

@@ -19,7 +19,7 @@ Copyright (C) 2005 JanRain, Inc.
 
 define('PHP_SERVER_PATH', dirname(__FILE__). '/');
 
-set_include_path(get_include_path() . PATH_SEPARATOR . 'libs/');
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/libs/');
 
 
 function getLanguage($code)

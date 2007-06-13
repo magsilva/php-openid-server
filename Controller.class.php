@@ -204,6 +204,17 @@ class Controller
 	
 
 		switch ($errno) {
+			case E_ERROR:
+			case E_WARNING:
+			case E_PARSE:
+			case E_NOTICE:
+			case E_CORE_ERROR:
+			case E_CORE_WARNING:
+			case E_COMPILE_ERROR:
+			case E_COMPILE_WARNING:
+				$template->addError($errstr);
+				break;
+		
 			case E_USER_ERROR:
 			    $template->addError($errstr);
 				break;
@@ -214,9 +225,6 @@ class Controller
 				exit();
 			
 			default:
-			
-//  "\n\nBacktrace of errorHandler()\n".
-//  print_r( debug_backtrace(), true);
     	}
 	
     	/* Don't execute PHP internal error handler */

@@ -37,31 +37,37 @@ class OpenIDServer
 	
 	static $openid_store;
 
-	function OpenIDServer()
+	function OpenIDServer($auth_backend, $auth_parameters, $storage_backend, $storage_parameters)
 	{
-		global $auth_parameters, $storage_parameters;
-		
 		session_start();
 		
 		// Initialize backends.
-		$this->startAuthBackend(AUTH_BACKEND, $auth_parameters);
-		$this->startStorageBackend(STORAGE_BACKEND, $storage_parameters);
+		$this->startAuthBackend($auth_backend, $auth_parameters);
+		$this->startStorageBackend($storage_backend, $storage_parameters);
 		$this->startOpenIDServer();
 	}
 	
 	function startAuthBackend($auth_backend, $auth_parameters)
 	{
-        $cls = 'AuthBackend_' . AUTH_BACKEND;
+        $cls = 'AuthBackend_' . $auth_backend;
+        if (! class_exists($cls)) {
+        	trigger_error('Could not start authencitation class');
+        }
+        
         $auth_backend = new $cls();
         if (! $auth_backend->connect($auth_parameters)) {
-            trigger_error('Cannot start authentication engine');
+            trigger_error('Could not start authentication engine');
         }
         $this->auth_backend = $auth_backend;
 	}
 	
 	function startStorageBackend($storage_backend, $storage_parameters)
 	{
-        $cls = 'Storage_' . STORAGE_BACKEND;
+        $cls = 'Storage_' . $storage_backend;
+        if (! class_exists($cls)) {
+        	trigger_error('Could not start storage class');
+        }
+        
         $storage_backend = new $cls();
         if (! $storage_backend->connect($storage_parameters)) {
             trigger_error('Cannot start storage engine');
@@ -76,22 +82,11 @@ class OpenIDServer
 	
 	function getOpenIDStore()
 	{
-		global $storage_parameters;
-
 		if (! $this->openid_store) {
-	        // Try to instantiate storage backend class from settings.
-	        $parameters = $storage_parameters;
-	        $parameters['phptype'] = 'mysql';
-	        $db =& DB::connect($parameters);
-	
-	        if (! PEAR::isError($db)) {
-	            $__openid_store =& new Auth_OpenID_MySQLStore($db);
-	            $__openid_store->createTables();
-	        } else {
-	            return null;
-	        }
-	    }
-	    return $__openid_store;
+	        $this->openid_store =& new Auth_OpenID_MySQLStore($this->storage_backend->db);
+	        $this->openid_store->createTables();
+		}
+	    return $this->openid_store;
 	}
 	
 	function setAccount($account_name, $admin = false)
@@ -180,9 +175,12 @@ class OpenIDServer
 	
 	function addSregData($account, &$response, $allowed_fields = null)
 	{
-	    $profile = $storage->getPersona($account);
+		global $controller;
+		
 	
-	    list($r, $sreg) = $this->getRequestInfo();
+	    $profile = $this->storage_backend->getPersona($account);
+	
+	    list($r, $sreg) = $controller->getRequestInfo();
 	    list($optional, $required, $policy_url) = $sreg;
 	
 	    if ($allowed_fields === null) {

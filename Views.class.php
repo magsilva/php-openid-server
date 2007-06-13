@@ -315,11 +315,11 @@ function render_identityPage($method, &$request, &$template)
 
 function render_trust($method, &$request, &$template)
 {
-    global $server, $storage;
+    global $controller, $server, $storage;
 
     $server->needAuth($request);
     $account = $server->getAccount();
-    list($request_info, $sreg) = $server->getRequestInfo();
+    list($request_info, $sreg) = $controller->getRequestInfo();
 
     if (! $request_info) {
         $controller->redirect($controller->getServerURL());
@@ -358,7 +358,7 @@ function render_trust($method, &$request, &$template)
             $response = $request_info->answer(false);
         }
 
-        $server->setRequestInfo();
+        $controller->setRequestInfo();
         $server->handleResponse($response);
     }
 
