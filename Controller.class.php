@@ -22,6 +22,31 @@ require_once('Views.class.php');
 
 class Controller
 {
+	var $template_engine;
+	
+	var $server;
+	
+	var $auth;
+	
+	var $storage;
+	
+	function Controller()
+	{
+	}
+
+	function setServer($server)
+	{
+		$this->server = $server;
+		$this->auth = $this->server->auth_backend;
+		$this->storage = $this->server->storage_backend;
+	}
+	
+	function setTemplateEngine($template_engine)
+	{
+		$this->template_engine = $template_engine;
+		set_error_handler(array($this, 'handleError'));
+	}
+
 	function getHandlers()
 	{
 		$request_handlers = array(
@@ -38,6 +63,19 @@ class Controller
 		
 		return $request_handlers;
 	}
+
+	function getHandler(&$request)
+	{
+		$handlers = $this->getHandlers();
+	
+	    if (array_key_exists('action', $request) && array_key_exists($request['action'], $handlers)) {
+	        // The handler is array($filename, $function_name).
+	        return $handlers[$request['action']];
+	    }
+	
+	    return null;
+	}
+
 	
 	function getRequest()
 	{
@@ -55,87 +93,38 @@ class Controller
     	return array($method, null);
 	}
 
-	function getRequestInfo()
-	{
-	    if (isset($_SESSION['request'])) {
-	        return array(unserialize($_SESSION['request']),
-	                     unserialize($_SESSION['sreg_request']));
-	    } else {
-	        return false;
-	    }
-	}
-
-	function setRequestInfo($info=null, $sreg=null)
-	{
-	    if (!isset($info)) {
-	        unset($_SESSION['request']);
-	    } else {
-	        $_SESSION['request'] = serialize($info);
-	        $_SESSION['sreg_request'] = serialize($sreg);
-	    }
-	}
-
-	function getMessages()
-	{
-    	if (array_key_exists('messages', $_SESSION)) {
-        	return $_SESSION['messages'];
-    	} else {
-        	return array();
-    	}
-	}
-
-	function clearMessages()
-	{
-    	unset($_SESSION['messages']);
-	}
-
-	function getHandler(&$request)
-	{
-		$handlers = $this->getHandlers();
-	
-	    if (array_key_exists('action', $request) && array_key_exists($request['action'], $handlers)) {
-	        // The handler is array($filename, $function_name).
-	        return $handlers[$request['action']];
-	    }
-	
-	    return null;
-	}
-
-
 	function showMessages()
 	{
-		global $template;
-	
 		// If any messages are pending, get them and display them.
-		$messages = $this->getMessages();
+		$messages = $this->server->getMessages();
 		foreach ($messages as $m) {
-    		$template->addMessage($m);
+    		$this->template->addMessage($m);
 		}
-		$this->clearMessages();
+		$this->server->clearMessages();
 	}
 	
 	function processRequest()
 	{
-		global $template;
-	
 		// First, get the request data.
 		list($method, $request) = $this->getRequest();
 
 		if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] == '/serve') {
-			render_serve($method, $request, $template);
+			render_serve($method, $request, $this->template_engine);
 			exit(0);
 		// If it's a request for an identity URL, render that.
 		} else if (array_key_exists('user', $request) && $request['user']) {
-			render_identityPage($method, $request, $template);
+			render_identityPage($method, $request, $this->template_engine);
 			exit(0);
 		// If it's a request for a user's XRDS, render that.
 		} else if (array_key_exists('xrds', $request) && $request['xrds']) {
-			render_XRDS($method, $request, $template);
+			render_XRDS($method, $request, $this->template_engine);
     		exit(0);
 		}
 		
-		
 		$this->showMessages();
+		$this->template_engine->assign('account', $this->server->getAccount());
+        $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
+		$this->template_engine->assign('SERVER_URL', $this->server->getServerURL());
 		
 		
 		if ($request === null) {
@@ -148,13 +137,43 @@ class Controller
 			if ($handler !== null) {
 				list($filename, $handler_function) = $handler;
 				require_once $filename;
-				call_user_func_array($handler_function, array($method, $request, $template));
+				call_user_func_array($handler_function, array($method, $request, $this));
 			} else {
 				$template->display('main.tpl');
 			}
 		}		
 	}
 	
+	
+	function handleError($errno, $errstr, $errfile, $errline)
+	{
+		switch ($errno) {
+			case E_ERROR:
+			case E_WARNING:
+			case E_PARSE:
+			case E_NOTICE:
+			case E_CORE_ERROR:
+			case E_CORE_WARNING:
+			case E_COMPILE_ERROR:
+			case E_COMPILE_WARNING:
+				$this->template_engine->addError($errstr);
+				break;
+		
+			case E_USER_ERROR:
+			    $this->template_engine->addError($errstr);
+				break;
+			
+			case E_USER_WARNING:
+			case E_USER_NOTICE:
+				echo 'Error in ' . $errfile . ':' . $errline . ' - ' . $errstr;
+				exit();
+			
+			default:
+    	}
+	
+    	/* Don't execute PHP internal error handler */
+    	return true;
+	}
 	
 	/**
 	 * Get the URL of the current script
@@ -178,11 +197,14 @@ class Controller
 	    return "http$s://$host$p$path";
 	}
 	
-	
 	function redirect($url, $action = null)
 	{
 		if ($url == null) {
 			$url = $this->getServerURL();
+		}
+		
+		if (strpos('http') != 0) {
+			$action = $url;
 		}
 		
 	    if ($action != null) {
@@ -197,38 +219,52 @@ class Controller
 	    exit(0);
 	}
 
-
-	function handleError($errno, $errstr, $errfile, $errline)
+	function forward($method, $request, $action)
 	{
-		global $template;
-	
+		// Dispatch request to appropriate handler.
+		$handler = $this->getHandler($action);
+		if ($handler !== null) {
+			list($filename, $handler_function) = $handler;
+			require_once $filename;
+			call_user_func_array($handler_function, array($method, $request, $this));
+		} else {
+			$template->display('main.tpl');
+		}
+	}
 
-		switch ($errno) {
-			case E_ERROR:
-			case E_WARNING:
-			case E_PARSE:
-			case E_NOTICE:
-			case E_CORE_ERROR:
-			case E_CORE_WARNING:
-			case E_COMPILE_ERROR:
-			case E_COMPILE_WARNING:
-				$template->addError($errstr);
-				break;
-		
-			case E_USER_ERROR:
-			    $template->addError($errstr);
-				break;
-			
-			case E_USER_WARNING:
-			case E_USER_NOTICE:
-				echo 'Error in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				exit();
-			
-			default:
-    	}
+
+
+	function getRequestInfo()
+	{
+	    if (isset($_SESSION['request'])) {
+	        return array(unserialize($_SESSION['request']),
+	                     unserialize($_SESSION['sreg_request']));
+	    } else {
+	        return false;
+	    }
+	}
+
+	function setRequestInfo($info=null, $sreg=null)
+	{
+	    if (!isset($info)) {
+	        unset($_SESSION['request']);
+	    } else {
+	        $_SESSION['request'] = serialize($info);
+	        $_SESSION['sreg_request'] = serialize($sreg);
+	    }
+	}
 	
-    	/* Don't execute PHP internal error handler */
-    	return true;
+	function handleResponse($response)
+	{
+	    $webresponse =& $this->server->openid_server->encodeResponse($response);
+	
+	    foreach ($webresponse->headers as $k => $v) {
+	        header("$k: $v");
+	    }
+	
+	    header('Connection: close');
+	    print $webresponse->body;
+	    exit(0);
 	}
 }
 ?>

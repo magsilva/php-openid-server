@@ -17,27 +17,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-define('PHP_SERVER_PATH', dirname(__FILE__). '/');
-set_include_path(get_include_path() . PATH_SEPARATOR . '.');
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/libs/');
+require_once('Action.class.php');
 
-
-require_once('Template.class.php');
-require_once('OpenIDServer.class.php');
-require_once('Controller.class.php');
-
-$controller = new Controller();
-
-// Initialize backends.
-$server = new OpenIDServer(AUTH_BACKEND, $auth_parameters, STORAGE_BACKEND, $storage_parameters);
-$controler->setServer($server);
-
-// Create a page template.
-$template = new Template();
-$controller->setTemplateEngine($template);
-
-
-$controller->processRequest();
+class Logout extends Action
+{
+	function process($method, &$request)
+	{
+	    $this->server->clearAccount();
+	    $this->controller->redirect();
+	}
+}
 
 ?>

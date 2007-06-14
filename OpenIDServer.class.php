@@ -117,17 +117,13 @@ class OpenIDServer
 	
 	function getAccountIdentifier($account)
 	{
-		global $controller;
-		
-    	return sprintf('%s?user=%s', $controller->getServerURL(), $account);
+	   	return sprintf('%s?user=%s', $this->getServerURL(), $account);
 	}
 	
 	function needAuth(&$request)
 	{
-		global $controller;
-	
 	    if (! $this->getAccount()) {
-	        $destination = $controller->getServerURL() . '?action=login';
+	        $destination = $this->getServerURL() . '?action=login';
 	        if (array_key_exists('action', $request)) {
 	            $destination .= '&next_action=' . $request['action'];
 	        }
@@ -150,6 +146,20 @@ class OpenIDServer
     	}
 
     	$_SESSION['messages'][] = $str;
+	}
+
+	function getMessages()
+	{
+    	if (array_key_exists('messages', $_SESSION)) {
+        	return $_SESSION['messages'];
+    	} else {
+        	return array();
+    	}
+	}
+
+	function clearMessages()
+	{
+    	unset($_SESSION['messages']);
 	}
 
 	function requestSregData($request)
@@ -175,12 +185,9 @@ class OpenIDServer
 	
 	function addSregData($account, &$response, $allowed_fields = null)
 	{
-		global $controller;
-		
-	
 	    $profile = $this->storage_backend->getPersona($account);
 	
-	    list($r, $sreg) = $controller->getRequestInfo();
+	    list($r, $sreg) = $this->getRequestInfo();
 	    list($optional, $required, $policy_url) = $sreg;
 	
 	    if ($allowed_fields === null) {
@@ -203,19 +210,6 @@ class OpenIDServer
 	}
 
 
-	function handleResponse($response)
-	{
-	    $webresponse =& $this->openid_server->encodeResponse($response);
-	
-	    foreach ($webresponse->headers as $k => $v) {
-	        header("$k: $v");
-	    }
-	
-	    header('Connection: close');
-	    print $webresponse->body;
-	    exit(0);
-	}
-	
 	function accountCheck($username, $pass1, $pass2)
 	{
 	    $errors = array();
@@ -234,9 +228,6 @@ class OpenIDServer
 	
 	    return $errors;
 	}
-
-
-
 }
 
 ?>

@@ -1,0 +1,112 @@
+<?php
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+ 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ 
+Copyright (C) 2005 JanRain, Inc.
+*/
+
+require_once('Action.class.php');
+
+class Trust extends Action
+{
+	function process($method, &$request)
+	{
+	    $this->server->needAuth($request);
+	    $account = $this->server->getAccount();
+	    list($request_info, $sreg) = $this->controller->getRequestInfo();
+	
+	    if (! $request_info) {
+	        $controller->redirect();
+	    }
+	
+	    $urls = $this->storage->getUrlsForAccount($account);
+	
+	    if (! in_array($request_info->identity, $urls)){
+	        $this->server->clearAccount();
+	        $this->controller->setRequestInfo($request_info, $sreg);
+	        $this->server->needAuth($request);
+	    }
+	
+	    if ($method == 'POST') {
+	        $trusted = false;
+	        if (isset($request['trust_forever'])) {
+	            $this->storage->trustLog($this->server->getAccount(), $request_info->trust_root, true);
+	            $trusted = true;
+	        } else if (isset($request['trust_once'])) {
+	            $this->storage->trustLog($this->server->getAccount(), $request_info->trust_root, false);
+	            $trusted = true;
+	        } else {
+	            $this->storage->trustLog($this->server->getAccount(), $request_info->trust_root, false);
+	        }
+	
+	        if ($trusted) {
+	            $allowed_fields = array();
+	
+	            if (array_key_exists('sreg', $request)) {
+	                $allowed_fields = array_keys($request['sreg']);
+	            }
+	
+	            $response = $request_info->answer(true);
+	            $this->server->addSregData($account, $response, $allowed_fields);
+	        } else {
+	            $response = $request_info->answer(false);
+	        }
+	
+	        $this->controller->setRequestInfo();
+	        $this->server->handleResponse($response);
+	    }
+	
+	    if ($sreg) {
+	        // Get the profile data and mark it up so it's easy to tell
+	        // what's required and what's optional.
+	        $profile = $this->storage->getPersona($account);
+	
+	        list($optional, $required, $policy_url) = $sreg;
+	
+	        $sreg_labels = array('nickname' => 'Nickname',
+	                             'fullname' => 'Full name',
+	                             'email' => 'E-mail address',
+	                             'dob' => 'Birth date',
+	                             'postcode' => 'Postal code',
+	                             'gender' => 'Gender',
+	                             'country' => 'Country',
+	                             'timezone' => 'Time zone',
+	                             'language' => 'Language');
+	
+	        $profile['country'] = getCountryName($profile['country']);
+	        $profile['language'] = getLanguage($profile['language']);
+	
+	        $new_profile = array();
+	        foreach ($profile as $k => $v) {
+	            if (in_array($k, $optional) || in_array($k, $required)) {
+	                $new_profile[] = array('name' => $sreg_labels[$k],
+	                                       'real_name' => $k,
+	                                       'value' => $v,
+	                                       'optional' => in_array($k, $optional),
+	                                       'required' => in_array($k, $required));
+	            }
+	        }
+	
+	        $this->template->assign('profile', $new_profile);
+	        $this->template->assign('policy_url', $policy_url);
+	    }
+	
+	    $this->template->assign('trust_root', $request_info->trust_root);
+	    $this->template->assign('identity', $request_info->identity);
+	    $this->template->display('trust.tpl');
+	 }
+}
+
+?>

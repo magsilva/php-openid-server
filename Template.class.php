@@ -47,17 +47,12 @@ class Template extends Smarty
 
     function display($filename = null, $template_override = false)
     {
-    	global $controller, $server;
-    
         $this->assign('errors', $this->errors);
         $this->assign('messages', $this->messages);
-        $this->assign('SERVER_URL', $controller->getServerURL());
         $this->assign('SITE_TITLE', SITE_TITLE);
         $this->assign('ADMIN', isset($_SESSION['admin']));
         $this->assign('SITE_ADMIN_EMAIL', SITE_ADMIN_EMAIL);
         $this->assign('ALLOW_PUBLIC_REGISTRATION', ALLOW_PUBLIC_REGISTRATION);
-        $this->assign('account', $server->getAccount());
-        $this->assign('account_openid_url', $server->getAccountIdentifier($server->getAccount()));
 
         if ($template_override && $filename) {
             return parent::display($filename);

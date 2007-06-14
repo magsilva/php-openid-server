@@ -17,11 +17,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-define('PHP_SERVER_PATH', dirname(__FILE__). '/');
-
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/libs/');
-
-
 function getLanguage($code)
 {
     global $language_codes;
@@ -835,7 +830,5 @@ $language_codes = array(array('AA', 'Afar'),
                         array('YO', 'Yoruba'),
                         array('ZH', 'Chinese'),
                         array('ZU', 'Zulu'));
-
-
-
+                        
 ?>
