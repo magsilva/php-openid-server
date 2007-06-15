@@ -72,7 +72,7 @@ class Serve extends Action
 	    }
 	
 	    $this->controller->setRequestInfo();
-		$this->server->handleResponse($response);
+		$this->controller->handleResponse($response);
 	}
 }
 
