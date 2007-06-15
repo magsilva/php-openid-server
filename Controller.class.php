@@ -180,8 +180,16 @@ class Controller
 
 	function processRequest()
 	{
+		$this->template_engine->assign('account', $this->server->getAccount());
+        $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
+		$this->template_engine->assign('SERVER_URL', $this->getServerURL());
+
 		// First, get the request data.
 		list($method, $request) = $this->getRequest();
+
+		$this->template_engine->assign('account', $this->server->getAccount());
+        $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
+		$this->template_engine->assign('SERVER_URL', $this->getServerURL());
 
 		if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] == '/serve') {
 			$this->forward($method, $request, 'serve');
@@ -194,9 +202,6 @@ class Controller
 		}
 		
 		$this->showMessages();
-		$this->template_engine->assign('account', $this->server->getAccount());
-        $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
-		$this->template_engine->assign('SERVER_URL', $this->getServerURL());
 		
 		
 		if ($request === null) {

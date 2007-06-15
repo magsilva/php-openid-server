@@ -64,13 +64,13 @@ class Trust extends Action
 	            }
 	
 	            $response = $request_info->answer(true);
-	            $this->server->addSregData($account, $response, $allowed_fields);
+	            $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
 	        } else {
 	            $response = $request_info->answer(false);
 	        }
 	
 	        $this->controller->setRequestInfo();
-	        $this->server->handleResponse($response);
+	        $this->controller->handleResponse($response);
 	    }
 	
 	    if ($sreg) {

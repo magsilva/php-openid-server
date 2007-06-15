@@ -51,7 +51,7 @@ class Serve extends Action
 	                   $this->storage->isTrusted($account, $request->trust_root) &&
 	                   in_array($request->identity, $urls)) {
 	             $response =& $request->answer(true);
-	             $this->server->addSregData($account, $response);
+	             $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	        } else if ($account != $this->storage->getAccountForUrl($request->identity)) {
 	            $this->server->clearAccount();
 	            $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
@@ -62,7 +62,7 @@ class Serve extends Action
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {
 	                $response =& $request->answer(true);
-	                $this->server->addSregData($account, $response);
+	                $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	            } else {
 	                $this->controller->redirect('trust');
 	            }

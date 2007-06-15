@@ -198,11 +198,11 @@ class OpenIDServer
 	    return array($optional, $required, $policy_url);
 	}
 	
-	function addSregData($account, &$response, $allowed_fields = null)
+	function addSregData($account, &$response, $request_info, $allowed_fields = null)
 	{
 	    $profile = $this->storage_backend->getPersona($account);
 	
-	    list($r, $sreg) = $this->getRequestInfo();
+	    list($r, $sreg) = $request_info;
 	    list($optional, $required, $policy_url) = $sreg;
 	
 	    if ($allowed_fields === null) {
