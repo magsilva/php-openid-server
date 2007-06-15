@@ -24,7 +24,7 @@ class Login extends Action
 	function process($method, &$request)
 	{
 	    if ($this->server->getAccount()) {
-	        $this->controler->redirect();
+	        $this->controller->redirect();
 	    }
 	
 	    if ($method == 'POST') {
@@ -42,10 +42,12 @@ class Login extends Action
 	                $url = $this->controller->getServerURL();
 	
 	                if (array_key_exists('next_action', $request)) {
-	                    $url .= '?action=' . $request['next_action'];
+	                    $action = $request['next_action'];
+						$this->controller->redirect($action);
+	                } else {
+	                	$this->controller->redirect();
 	                }
-	
-					$this->controller->redirect($url);
+					
 	            } else {
 	                $this->template->addError('Invalid account information.');
 	            }

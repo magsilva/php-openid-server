@@ -18,7 +18,6 @@ Copyright (C) 2005 JanRain, Inc.
 */
 
 require_once('Action.class.php');
-require_once('common.php');
 
 class Account extends Action
 {
@@ -30,7 +29,10 @@ class Account extends Action
 	        $sreg_fields,
 	        $timezone_strings;
 	
-	    $this->server->needAuth($request);
+	    if ($this->server->needAuth($request)) {
+	    	$this->controller->redirectWithLogin($request);
+	    }
+	    
 	    $account = $this->server->getAccount();
 	
 	    if ($method == 'POST') {

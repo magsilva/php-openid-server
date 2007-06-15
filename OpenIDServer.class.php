@@ -29,22 +29,26 @@ require_once('Auth/OpenID/MySQLStore.php');
 
 class OpenIDServer
 {
+	var $domain;
+	
 	var $auth_backend;
 	
 	var $storage_backend;
 	
-	var $openid_server;
+	var $openid_store;
 	
-	static $openid_store;
-
-	function OpenIDServer($auth_backend, $auth_parameters, $storage_backend, $storage_parameters)
+	static $openid_server = null;
+	
+	function OpenIDServer($domain, $auth_backend, $auth_parameters, $storage_backend, $storage_parameters)
 	{
 		session_start();
 		
+		$this->domain = $domain;
 		// Initialize backends.
 		$this->startAuthBackend($auth_backend, $auth_parameters);
 		$this->startStorageBackend($storage_backend, $storage_parameters);
-		$this->startOpenIDServer();
+		$this->startOpenIDStore($storage_backend, $storage_parameters);
+		$this->startOpenIDServer($storage_backend, $storage_parameters);
 	}
 	
 	function startAuthBackend($auth_backend, $auth_parameters)
@@ -58,7 +62,7 @@ class OpenIDServer
         if (! $auth_backend->connect($auth_parameters)) {
             trigger_error('Could not start authentication engine');
         }
-        $this->auth_backend = $auth_backend;
+        $this->auth_backend =& $auth_backend;
 	}
 	
 	function startStorageBackend($storage_backend, $storage_parameters)
@@ -72,22 +76,35 @@ class OpenIDServer
         if (! $storage_backend->connect($storage_parameters)) {
             trigger_error('Cannot start storage engine');
 	    }
-	    $this->storage_backend = $storage_backend;
+	    $this->storage_backend =& $storage_backend;
 	}
-	
+
+	function startOpenIDStore($storage_backend, $storage_parameters)
+	{
+		$parameters = $storage_parameters;
+       	$parameters['phptype'] = 'mysql';
+       	$db =& DB::connect($parameters);
+       	if (!PEAR::isError($db)) {
+       		$openid_store =& new Auth_OpenID_MySQLStore($db);
+       		$openid_store->createTables();
+       		$this->openid_store =& $openid_store;
+		}
+	}
+
 	function startOpenIDServer()
 	{
-		$this->openid_server = new Auth_OpenID_Server($this->getOpenIDStore());
+/*
+ 		static $server = null;
+    	if (! isset($server)) {
+    		$server =& new Auth_OpenID_Server(Server_getOpenIDStore());
+    	}
+    	return $server;
+*/
+    	if ($this->openid_server == null) {
+    		$this->openid_server =& new Auth_OpenID_Server($this->openid_store);
+    	}
 	}
 	
-	function getOpenIDStore()
-	{
-		if (! $this->openid_store) {
-	        $this->openid_store =& new Auth_OpenID_MySQLStore($this->storage_backend->db);
-	        $this->openid_store->createTables();
-		}
-	    return $this->openid_store;
-	}
 	
 	function setAccount($account_name, $admin = false)
 	{
@@ -117,26 +134,24 @@ class OpenIDServer
 	
 	function getAccountIdentifier($account)
 	{
-	   	return sprintf('%s?user=%s', $this->getServerURL(), $account);
+		$identifier = sprintf('%s?user=%s', $this->domain, $account);
+		return $identifier;
 	}
 	
 	function needAuth(&$request)
 	{
 	    if (! $this->getAccount()) {
-	        $destination = $this->getServerURL() . '?action=login';
-	        if (array_key_exists('action', $request)) {
-	            $destination .= '&next_action=' . $request['action'];
-	        }
-	
-			$controller->redirect($destination);
+	    	return true;
 	    }
+	    return false;
 	}
 	
 	function needAdmin()
 	{
 	    if (!isset($_SESSION['admin'])) {
-	        $controller->redirect($controller->getServerURL());
+	        return true;
 	    }
+	    return false;
 	}
 	
 	function addMessage($str)

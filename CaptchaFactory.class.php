@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-class Captcha
+class CaptchaFactory
 {
 	var $font_path;
 	
@@ -25,7 +25,7 @@ class Captcha
 	
 	var $text_size;
 	
-	function Captcha()
+	function CaptchaFactory()
 	{
 		$this->font_path = PHP_SERVER_PATH . '/fonts/FreeSans.ttf';
 		$this->text_size = 45;

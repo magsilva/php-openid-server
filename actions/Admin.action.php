@@ -23,8 +23,13 @@ class Admin extends Action
 {
 	function process($method, &$request)
 	{
-	    $this->server->needAuth($request);
-	    $this->server->needAdmin();
+	    
+	    if ($this->server->needAuth($request)) {
+	    	$this->controller->redirectWithLogin($request);
+	    }
+	    if ($this->server->needAdmin()) {
+	    	$this->controller->redirectWithAdmin($request);
+	    }
 	
 	    if (array_key_exists('username', $request)) {
 	        $username = $request['username'];

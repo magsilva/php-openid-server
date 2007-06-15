@@ -23,7 +23,10 @@ class Sites extends Action
 {
 	function process($method, &$request)
 	{
-	    $this->server->needAuth($request);
+	    if ($this->server->needAuth($request)) {
+	    	$this->controller->redirectWithLogin($request);
+	    }
+	    
 	    $account = $this->server->getAccount();
 	    $sites = $this->storage->getSites($account);
 	

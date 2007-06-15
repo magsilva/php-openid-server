@@ -18,13 +18,13 @@ Copyright (C) 2005 JanRain, Inc.
 */
 
 require_once('Action.class.php');
-require_once('Captcha.class.php');
+require_once('CaptchaFactory.class.php');
 
 class Captcha extends Action
 {
 	function process($method, &$request)
 	{
-		$captcha = new Captcha();
+		$captcha = new CaptchaFactory();
 	
 	    // Render a captcha image and store the hash.  See register.tpl.
 	    $hash = $captcha->generateCaptcha(6);

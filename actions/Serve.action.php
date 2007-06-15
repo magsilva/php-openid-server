@@ -25,13 +25,13 @@ class Serve extends Action
 	{
 	    $http_request = $request;
 	    $request = $this->openid_server->decodeRequest();
-	
+
 	    if (! $request) {
 	        $this->controller->redirect();
 	    }
-	
+
 	    if (is_a($request, 'Auth_OpenID_ServerError')) {
-	        $this->server->handleResponse($request);
+	        $this->controller->handleResponse($request);
 	    }
 	
 	    $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
@@ -45,8 +45,8 @@ class Serve extends Action
 	            $urls = $this->storage->getUrlsForAccount($account);
 	        }
 	
-	        if ($request->immediate && !$account) {
-	            $response =& $request->answer(false, $controller->getServerURL());
+	        if ($request->immediate && ! $account) {
+	            $response =& $request->answer(false, $this->controller->getServerURL());
 	        } else if ($account &&
 	                   $this->storage->isTrusted($account, $request->trust_root) &&
 	                   in_array($request->identity, $urls)) {
@@ -56,7 +56,9 @@ class Serve extends Action
 	            $this->server->clearAccount();
 	            $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
 	            $http_request['action'] = 'trust';
-	            $this->server->needAuth($http_request);
+			    if ($this->server->needAuth($http_request)) {
+			    	$this->controller->redirectWithLogin($http_request);
+			    }
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {
 	                $response =& $request->answer(true);

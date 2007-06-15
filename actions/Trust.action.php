@@ -23,12 +23,15 @@ class Trust extends Action
 {
 	function process($method, &$request)
 	{
-	    $this->server->needAuth($request);
+	    if ($this->server->needAuth($request)) {
+	    	$this->controller->redirectWithLogin($request);
+	    }
+	    
 	    $account = $this->server->getAccount();
 	    list($request_info, $sreg) = $this->controller->getRequestInfo();
 	
 	    if (! $request_info) {
-	        $controller->redirect();
+	        $this->controller->redirect();
 	    }
 	
 	    $urls = $this->storage->getUrlsForAccount($account);
@@ -36,7 +39,9 @@ class Trust extends Action
 	    if (! in_array($request_info->identity, $urls)){
 	        $this->server->clearAccount();
 	        $this->controller->setRequestInfo($request_info, $sreg);
-	        $this->server->needAuth($request);
+		    if ($this->server->needAuth($request)) {
+		    	$this->controller->redirectWithLogin($request);
+		    }
 	    }
 	
 	    if ($method == 'POST') {
