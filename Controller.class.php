@@ -192,6 +192,8 @@ class Controller
 	            $url .= '&lang=' . $this->template_engine->language;
 	        }
 	    }
+	    
+	    return $url;
 	}
 
 
@@ -199,6 +201,7 @@ class Controller
 	{
 		$this->template_engine->assign('account', $this->server->getAccount());
         $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
+		$this->template_engine->assign('RAW_SERVER_URL', $this->getServerURL());
 		$this->template_engine->assign('SERVER_URL', $this->getServerURLWithLanguage());
 
 		// First, get the request data.

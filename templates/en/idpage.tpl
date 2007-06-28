@@ -1,6 +1,6 @@
 <html>
   <head>
-    <link rel="openid.server" href="{$SERVER_URL}index.php/serve">
+    <link rel="openid.server" href="{$RAW_SERVER_URL}index.php/serve">
     <link rel="openid.delegate" href="{$openid_url}">
   </head>
   <body>
