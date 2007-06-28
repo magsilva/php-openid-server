@@ -39,8 +39,7 @@ class Login extends Action
 	                $this->controller->redirect();
 	            } else if (($u != ADMIN_USERNAME) &&  $this->auth->authenticate($u, $p)) {
 	                $this->server->setAccount($u);
-	                $url = $this->controller->getServerURL();
-	
+	                	
 	                if (array_key_exists('next_action', $request)) {
 	                    $action = $request['next_action'];
 						$this->controller->redirect($action);

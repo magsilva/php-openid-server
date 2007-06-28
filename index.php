@@ -35,8 +35,13 @@ $controller = new Controller();
 $server = new OpenIDServer($controller->getServerURL(), AUTH_BACKEND, $auth_parameters, STORAGE_BACKEND, $storage_parameters);
 $controller->setServer($server);
 
-
 // Create a page template.
+$language = SITE_LANGUAGE;
+if (isset($_GET['lang'])) {
+	if (key_exists($_GET['lang'], $valid_lang) ) {
+		$language = $_GET['lang'];
+	}
+}
 $template = new Template();
 $controller->setTemplateEngine($template);
 

@@ -27,10 +27,26 @@ require_once('smarty/libs/Smarty.class.php');
  */
 class Template extends Smarty
 {
-    function Template()
+	var $available_languages;
+	
+	var $language;
+	
+    function Template($language = SITE_LANGUAGE)
     {
-        $this->template_dir = PHP_SERVER_PATH . 'templates';
-        $this->compile_dir = PHP_SERVER_PATH . 'templates/templates_c';
+    	$this->available_languages = array(
+			'default' => 'default language',
+			'en' => 'english',
+			'de' => 'deutsch'
+		);
+    
+    	if (key_exists($language, $this->available_languages)) {
+			$this->language = $language;
+		} else {
+			$this->language = SITE_LANGUAGE;
+		}
+		    
+        $this->template_dir = PHP_SERVER_PATH . 'templates/' . $this->language;
+        $this->compile_dir = PHP_SERVER_PATH . 'templates/' . $this->language . '/templates_c';
         $this->errors = array();
         $this->messages = array();
     }
@@ -53,6 +69,8 @@ class Template extends Smarty
         $this->assign('ADMIN', isset($_SESSION['admin']));
         $this->assign('SITE_ADMIN_EMAIL', SITE_ADMIN_EMAIL);
         $this->assign('ALLOW_PUBLIC_REGISTRATION', ALLOW_PUBLIC_REGISTRATION);
+        $this->assign('current_language', 'lang=' . $this->language);
+        $this->assign('available_languages', $this->available_languages);
 
         if ($template_override && $filename) {
             return parent::display($filename);

@@ -30,7 +30,7 @@ class Controller
 	function Controller()
 	{
 	}
-
+	
 	function setServer($server)
 	{
 		$this->server = $server;
@@ -178,18 +178,31 @@ class Controller
 	    return "http$s://$host$p$path";
 	}
 
+	/**
+	 * Get the URL of the current script
+	 */
+	function getServerURLWithLanguage()
+	{
+		$url = $this->getServerURL();
+
+		if (isset($_GET['lang'])) {
+	        if (strpos($url, '?') === false) {
+	            $url .= '?lang=' . $this->template_engine->language;
+	        } else {
+	            $url .= '&lang=' . $this->template_engine->language;
+	        }
+	    }
+	}
+
+
 	function processRequest()
 	{
 		$this->template_engine->assign('account', $this->server->getAccount());
         $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
-		$this->template_engine->assign('SERVER_URL', $this->getServerURL());
+		$this->template_engine->assign('SERVER_URL', $this->getServerURLWithLanguage());
 
 		// First, get the request data.
 		list($method, $request) = $this->getRequest();
-
-		$this->template_engine->assign('account', $this->server->getAccount());
-        $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
-		$this->template_engine->assign('SERVER_URL', $this->getServerURL());
 
 		if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] == '/serve') {
 			$this->forward($method, $request, 'serve');
@@ -248,6 +261,15 @@ class Controller
 	    
 	    if ($next_actions != null) {
 	    	$url .= '&next_action=' . $next_action;
+	    }
+
+
+	    if ($action != null && isset($_GET['lang'])) {
+	        if (strpos($url, '?') === false) {
+	            $url .= '?lang=' . $this->template_engine->language;
+	        } else {
+	            $url .= '&lang=' . $this->template_engine->language;
+	        }
 	    }
 
 	    header('Location: ' . $url);

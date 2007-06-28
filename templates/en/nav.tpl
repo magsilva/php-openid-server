@@ -3,7 +3,8 @@
     {if $account}
       <li class="right nohover">Logged in as <span class="openid">{$account}</span></li>
     {/if}
-    <li><a href="{$SERVER_URL}">Home</a></li>
+    <li>
+    <a href="{$SERVER_URL}">Home</a></li>
     {if $account}
       {if $ADMIN}
         <li><a href="{$SERVER_URL}?action=admin">Administration</a></li>
@@ -18,5 +19,15 @@
       <li><a href="{$SERVER_URL}?action=register">Register</a></li>
       {/if}
     {/if}
+    
+	<li style="align:right">
+	|
+    {foreach from=$available_languages key=key item=value}
+    	{if $key <> 'default'}
+			<a href="{$SERVER_URL}?lang={$key}"><img src="images/{$key}.png" border="0" alt="{$value}"></a> | 
+    	{/if}
+    {/foreach}
+    </li>
+	
   </ul>
 </div>

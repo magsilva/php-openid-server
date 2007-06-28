@@ -11,6 +11,11 @@
 define('SITE_TITLE', 'Núcleo de Manufatura Avançada (NUMA)');
 
 /**
+ * Site default language.
+ */
+define('SITE_LANGUAGE', 'en');
+
+/**
  * The administrator's email address.  You may leave this empty if you
  * wish.  If empty, the "Contact (email address)" message will not
  * appear on every page footer.
