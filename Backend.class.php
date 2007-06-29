@@ -24,6 +24,8 @@ Copyright (C) 2005 JanRain, Inc.
  
 // File required from PEAR DB.
 require_once('DB.php');
+require_once('xmpp/xep-0070.php');
+
 
 /**
  * Data storage area. We don't worry, for now, about data creation and 
@@ -166,12 +168,11 @@ class Backend_LDAP extends Backend
     }
 }
 
-
 class Backend_XMPP
 {
     var $xep_0070;
     
-	/*
+	/**
 	 * Connect to a XMPP server.
 	 * 
 	 * @param $parameters Array Parameters used to connect to the storage

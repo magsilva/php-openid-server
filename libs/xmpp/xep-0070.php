@@ -1,9 +1,9 @@
 <?php
 
-require_once "class.jabber.php";
-require_once "config.php";
+require_once('class.jabber.php');
 
-class XEP_0070 extends JABBER {
+class XEP_0070 extends JABBER
+{
     function AuthJID($user, $password, $method, $uri)
     {
         // XXX: better error handling?

@@ -19,7 +19,6 @@ Copyright (C) 2005 JanRain, Inc.
 
 
 require_once('Backend.class.php');
-require_once('xep-0070.php');
 
 /**
  * Authentication backend interface.
@@ -332,7 +331,6 @@ class AuthBackend_LDAP extends Backend_LDAP
 		return $number;		
 	}
 }
-
 
 
 class AuthBackend_XMPP extends Backend_XMPP

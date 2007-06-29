@@ -184,7 +184,7 @@ class Controller
 	        $path .= '/';
 	    }
 	
-	    return $this->getServerURL() . $path;
+	    return $this->getServerRootURL() . $path;
 	}
 
 	/**
