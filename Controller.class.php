@@ -29,6 +29,7 @@ class Controller
 	
 	function Controller()
 	{
+		$this->log = &Logging::instance();
 	}
 	
 	function setServer($server)
@@ -302,14 +303,18 @@ class Controller
 	
 	function forward($method, $request, $action)
 	{
+		$this->log->info("Forwarding to action '$action'");
 		// Dispatch request to appropriate handler.
 		$handler = $this->getHandler($action);
 		if ($handler !== null) {
+			$this->log->info("Found a handler for action '$action'");
 			list($filename, $clsname) = $handler;
 			require_once($filename);
 			$action = new $clsname($this);
+			$this->log->info("Handing over the job the the handler '$clsname'");
 			$action->process($method, $request);
 		} else {
+			$this->log->info("No suitable handler found for action '$action', redirecting to the main page.");
 			$this->template_engine->display('main.tpl');
 		}
 		exit();

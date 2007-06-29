@@ -81,4 +81,34 @@ $auth_parameters = array('server_name' => 'localhost',
                          'admin_username' => 'cn=admin,dc=m242,dc=numa,dc=intranet',
                          'admin_password' => 'admin',
                          'user_filter' => '(uid=%USERNAME%)');
+
+/**
+ * Cookie name.
+ */                         
+define('COOKIE_NAME', 'secret');
+
+/**
+ * Default cookie timeout.
+ */
+define('COOKIE_TIMEOUT', time() + (60 * 60 * 24 * 7));		
+
+/**
+ * Filename to output the logging information.
+ */
+define('LOG_FILENAME', dirname(__FILE__) . '/out.log');
+
+/**
+ * Kind of logging message to be recorded.
+ * 
+ * PEAR_LOG_EMERG  System is unusable
+ * PEAR_LOG_ALERT Immediate action required
+ * PEAR_LOG_CRIT Critical conditions
+ * PEAR_LOG_ERR Error conditions
+ * PEAR_LOG_WARNING Warning conditions
+ * PEAR_LOG_NOTICE Normal but significant
+ * PEAR_LOG_INFO Informational
+ * PEAR_LOG_DEBUG Debug-level messages
+ */
+define('LOG_ERROR_LEVEL', PEAR_LOG_DEBUG);
+
 ?>

@@ -40,6 +40,8 @@ class Action
 		$this->openid_server =& $this->server->openid_server;
 		$this->storage =& $this->server->storage_backend;
 		$this->template =& $this->controller->template_engine;
+		
+		$this->log = &Logging::instance();
 	}
 	
 	function process($method, &$request) {}

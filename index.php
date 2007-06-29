@@ -22,19 +22,24 @@ set_include_path(get_include_path() . PATH_SEPARATOR . '.');
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/libs/');
 
+
 require_once('common.php');
 require_once('config.php');
 
+require_once('Logging.class.php');
 require_once('Template.class.php');
 require_once('OpenIDServer.class.php');
 require_once('Controller.class.php');
 
-$controller = new Controller();
+$log = &Logging::instance();
 
+$controller = new Controller();
+$log->info('Controller initialized');
 
 // Initialize backends.
 $server = new OpenIDServer($controller->getServerURL(), AUTH_BACKEND, $auth_parameters, STORAGE_BACKEND, $storage_parameters);
 $controller->setServer($server);
+$log->info('OpenID server initialized');
 
 // Create a page template.
 $language = SITE_LANGUAGE;
@@ -45,10 +50,12 @@ if (isset($_GET['lang'])) {
 }
 $template = new Template();
 $controller->setTemplateEngine($template);
+$log->info('Template engine initialized');
 
 set_error_handler(array($controller, 'handleError'));
+$log->info('Handed over the error handling to the application controller');
 
-
+$log->info('Handing over the request processment to the controller. Gambate!');
 $controller->processRequest();
 
 ?>

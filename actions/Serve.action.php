@@ -27,32 +27,41 @@ class Serve extends Action
 	    $request = $this->openid_server->decodeRequest();
 
 	    if (! $request) {
+	        $this->log->err('Invalid OpenID request');
 	        $this->controller->redirect();
 	    }
 
 	    if (is_a($request, 'Auth_OpenID_ServerError')) {
+	        $this->log->err('Invalid OpenID request');
 	        $this->controller->handleResponse($request);
 	    }
 	
 	    $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
 	
 	    if (in_array($request->mode, array('checkid_immediate', 'checkid_setup'))) {
-	
+			$this->log->info('OpenID request is for authentication, proceeding');
+			
 	        $urls = array();
+	        
 	        $account = $this->server->getAccount();
-	
 	        if ($account) {
 	            $urls = $this->storage->getUrlsForAccount($account);
 	        }
+	        $openid_identity = $request->identity;
+	        $expected_account = $this->storage->getAccountForUrl($request->identity);
 	
 	        if ($request->immediate && ! $account) {
+				$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated");
 	            $response =& $request->answer(false, $this->controller->getServerURL());
 	        } else if ($account &&
 	                   $this->storage->isTrusted($account, $request->trust_root) &&
 	                   in_array($request->identity, $urls)) {
-	             $response =& $request->answer(true);
-	             $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
+				$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
+				setcookie(COOKIE_NAME, $openid_identity);
+				$response =& $request->answer(true);
+				$this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	        } else if ($account != $this->storage->getAccountForUrl($request->identity)) {
+				$this->log->info("User '$account' ($openid_identity) isn't authenticated");
 	            $this->server->clearAccount();
 	            $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
 	            $http_request['action'] = 'trust';
@@ -61,13 +70,18 @@ class Serve extends Action
 			    }
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {
+					$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
+					setcookie(COOKIE_NAME, $openid_identity);
 	                $response =& $request->answer(true);
 	                $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	            } else {
+	            	$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' isn't trusted");
+					setcookie(COOKIE_NAME, $openid_identity);
 	                $this->controller->redirect('trust');
 	            }
 	        }
 	    } else {
+			$this->log->info("OpenID request is for something I don't know");
 	        $response =& $this->openid_server->handleRequest($request);
 	    }
 	
