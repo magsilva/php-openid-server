@@ -48,9 +48,11 @@ class Login extends Action
 	                }
 					
 	            } else {
-	                $this->template->addError('Invalid account information.');
+	                $this->template->addError('The confirmation request was rejected, or timed out.');
 	            }
-	        }
+			} else {
+				$template->addError('Please fill in all the available fields.');
+			}
 	    }
 	
 	    if (array_key_exists('next_action', $request)) {

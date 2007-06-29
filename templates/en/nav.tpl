@@ -18,6 +18,9 @@
       {if $ALLOW_PUBLIC_REGISTRATION}
       <li><a href="{$SERVER_URL}?action=register">Register</a></li>
       {/if}
+      {if $required_user}
+      <li><a href="{$SERVER_URL}?action=logout">Log out</a></li>
+      {/if}
     {/if}
     
 	<li style="align:right">

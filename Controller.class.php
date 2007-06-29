@@ -155,17 +155,12 @@ class Controller
     	/* Don't execute PHP internal error handler */
     	return true;
 	}
-	
+
 	/**
 	 * Get the URL of the current script
 	 */
-	function getServerURL()
+	function getServerRootURL()
 	{
-	    $path = dirname($_SERVER['SCRIPT_NAME']);
-	    if ($path[strlen($path) - 1] != '/') {
-	        $path .= '/';
-	    }
-	
 	    $host = $_SERVER['HTTP_HOST'];
 	    $port = $_SERVER['SERVER_PORT'];
 	    $s = isset($_SERVER['HTTPS']) ? 's' : '';
@@ -175,7 +170,21 @@ class Controller
 	        $p = ':' . $port;
 	    }
 	    
-	    return "http$s://$host$p$path";
+	    return "http$s://$host$p";
+	}
+
+	
+	/**
+	 * Get the URL of the current script
+	 */
+	function getServerURL()
+	{
+		$path = dirname($_SERVER['SCRIPT_NAME']);
+	    if ($path[strlen($path) - 1] != '/') {
+	        $path .= '/';
+	    }
+	
+	    return $this->getServerURL() . $path;
 	}
 
 	/**

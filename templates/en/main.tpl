@@ -16,7 +16,7 @@ Your OpenID is:
 </p>
 
 <pre>
-{$account_openid_url}
+<a href="{$account_openid_url}">{$account_openid_url}</a>
 </pre>
 
 <p>
@@ -25,8 +25,8 @@ You can use your own URL as your OpenID.  Just edit the
 content:
 
 <pre>
-&lt;link rel="openid.server" href="{$RAW_SERVER_URL}index.php/serve"&gt;
-&lt;link rel="openid.delegate" href="{$account_openid_url}"&gt;
+&lt;link rel="openid.server" href="<a href="{$RAW_SERVER_URL}index.php/serve">"{$RAW_SERVER_URL}index.php/serve</a>"&gt;
+&lt;link rel="openid.delegate" href="<a href="{$account_openid_url}">{$account_openid_url}</a>"&gt;
 </pre>
 
 Then you can use your URL to authenticate to this server.

@@ -19,17 +19,36 @@ Copyright (C) 2005 JanRain, Inc.
 
 
 require_once('Backend.class.php');
+require_once('xep-0070.php');
 
 /**
  * Authentication backend interface.
  */
 class AuthBackend
 {
-	function newAccount($username, $password, $query) {}   
-    function removeAccount($username) {}
-    function authenticate($username, $password) {}
-    function setPassword($username, $password) {}
-    function search($str = null) {}
+    function newAccount($username, $password, $query)
+    {
+        return false;
+    }
+    
+    function removeAccount($username)
+    {
+    	return false;
+    }
+
+	function setPassword($username, $password)
+	{
+	}
+
+    function search($str = null)
+    {
+        return array();
+    }
+
+    function authenticate($username, $password)
+    {
+    	return false;
+    }
 }
 
 
@@ -159,11 +178,11 @@ class AuthBackend_LDAP extends Backend_LDAP
 		$ldaprecord['userPassword'] = '{MD5}' . base64_encode(pack('H*',md5($password)));
 		// $ldaprecord['telephoneNumber'] = (isset($query['LastName'])) ? $query['TelephoneNumber'] : '';
 		
-		$ldaprecord['objectclass'][] = "inetOrgPerson";
+		$ldaprecord['objectclass'][] = 'inetOrgPerson';
 		// jpegPhoto
 		// preferredLanguage
 		
-		$ldaprecord['objectclass'][] = "posixAccount";
+		$ldaprecord['objectclass'][] = 'posixAccount';
 		$ldaprecord['uid'] = $username;
 		$ldaprecord['homeDirectory'] = '/home/' . $username;
 		$ldaprecord['loginShell'] = (isset($query['LoginShell'])) ? $query['LoginShell'] : '/bin/bash';
@@ -313,4 +332,30 @@ class AuthBackend_LDAP extends Backend_LDAP
 		return $number;		
 	}
 }
+
+
+
+class AuthBackend_XMPP extends Backend_XMPP
+{
+    var $jidregex = '/^([^"&\'\/:<>@]+@([a-zA-Z0-9_\-\.]+)\.[a-zA-Z]{2,5}(\/.+)?)$/';
+    
+    function authenticate($username, $password)
+    {
+        $this->xep_0070->resource = md5($username);
+    
+        if (! preg_match($this->jidregex, $username)) {
+        	return false;
+        }
+        
+        if ($username == 'true@example.com') {
+        	return true;
+        }
+        if ($username == 'false@example.com') {
+        	return false;
+        }
+
+        return $this->xep_0070->AuthJID($username, $password, 'OpenID', Controller::getServerRootUrl());
+    }
+}
+
 ?>

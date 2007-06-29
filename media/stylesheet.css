@@ -188,3 +188,19 @@ span.trusted {
 span.untrusted {
     color: red;
 }
+
+span.whatsthis > div {
+    display: none;
+    position: absolute;
+}
+
+span.whatsthis div {
+	border: solid 1px black;
+	font-size: smaller;
+	background: white;
+	padding: 5px;
+}
+
+span.whatsthis:hover div {
+	display: block;
+}

@@ -166,4 +166,27 @@ class Backend_LDAP extends Backend
     }
 }
 
+
+class Backend_XMPP
+{
+    var $xep_0070;
+    
+	/*
+	 * Connect to a XMPP server.
+	 * 
+	 * @param $parameters Array Parameters used to connect to the storage
+	 * area. The expected array's keys are 'server' (name of the server),
+	 * 'port' (the server's port), 'username' (the username required to
+	 * connect) and 'password' (the user's password).
+	 */
+	function connect($parameters)
+	{
+        $this->xep_0070 = new XEP_0070();
+        $this->xep_0070->server = $parameters['server'];
+        $this->xep_0070->port = $parameters['port'];
+        $this->xep_0070->username = $parameters['username'];
+        $this->xep_0070->password = $parameters['password'];
+	}
+}
+
 ?>

@@ -217,4 +217,39 @@ class Storage_MYSQL extends Backend_MYSQL
     }
 }
 
+/* XMPP patch
+class Storage_SimpleMYSQL extends Storage_MYSQL
+{
+    function getAccountForUrl($identifier)
+    {
+        $result = substr($identifier, strlen(Server_getAccountIdentifier("")));
+
+        if (substr($result, 0, 7) == 'base64/')
+        {
+            $result = trim(base64_decode(substr($result, 7)));
+        }
+
+        if (PEAR::isError($result)) {
+            return null;
+        } else {
+            return $result;
+        }
+    }
+
+    function getUrlsForAccount($account)
+    {
+        $result = array(
+            Server_getAccountIdentifier($account),
+            Server_getAccountIdentifier('base64/'.base64_encode($account)),
+        );
+
+        if (PEAR::isError($result)) {
+            return null;
+        } else {
+            return $result;
+        }
+    }
+}
+*/
+
 ?>
