@@ -60,11 +60,10 @@ class AuthBackend_MYSQL extends Backend_MYSQL
     function _init()
     {
         // Create tables for OpenID storage backend.
-        $tables = array(
-                        "CREATE TABLE accounts (" .
-                        "id INTEGER AUTO_INCREMENT PRIMARY KEY, " .
-                        "username VARCHAR(255) UNIQUE, " .
-                        "password VARCHAR(32))",
+        $tables = array('CREATE TABLE accounts (' .
+                        	'username VARCHAR(255) NOT NULL PRIMARY KEY, ' .
+                        	'password VARCHAR(255)' .
+                        ')',
                         );
 
         foreach ($tables as $t) {
@@ -74,10 +73,8 @@ class AuthBackend_MYSQL extends Backend_MYSQL
 
     function newAccount($username, $password, $query)
     {
-        $result = $this->db->query("INSERT INTO accounts (username, password) " .
-                                   "VALUES (?, ?)",
-                                   array($username,
-                                         $this->_encodePassword($password)));
+        $result = $this->db->query('INSERT INTO accounts (username, password) VALUES (?, ?)',
+                                   array($username, $this->_encodePassword($password)));
 
         // $query is ignored for this implementation, but you might
         // choose to change the login process to incorporate other
@@ -88,7 +85,6 @@ class AuthBackend_MYSQL extends Backend_MYSQL
         // your new fields.
 
         if (PEAR::isError($result)) {
-            print_r($result);
             return false;
         } else {
             return true;
@@ -97,16 +93,13 @@ class AuthBackend_MYSQL extends Backend_MYSQL
 
     function removeAccount($username)
     {
-        $this->db->query("DELETE FROM accounts WHERE username = ?",
-                         array($username));
+        $this->db->query('DELETE FROM accounts WHERE username = ?', array($username));
     }
 
     function authenticate($username, $password)
     {
-        $result = $this->db->getOne("SELECT id FROM accounts WHERE " .
-                                    "username = ? AND password = ?",
-                                    array($username,
-                                          $this->_encodePassword($password)));
+        $result = $this->db->getOne('SELECT username FROM accounts WHERE username = ? AND password = ?',
+                                    array($username, $this->_encodePassword($password)));
         if (PEAR::isError($result) || (!$result)) {
             return false;
         } else {
@@ -116,9 +109,8 @@ class AuthBackend_MYSQL extends Backend_MYSQL
 
     function setPassword($username, $password)
     {
-        $result = $this->db->query("UPDATE accounts SET password = ? WHERE username = ?",
-                                   array($this->_encodePassword($password),
-                                         $username));
+        $result = $this->db->query('UPDATE accounts SET password = ? WHERE username = ?',
+                                   array($this->_encodePassword($password), $username));
         if (PEAR::isError($result)) {
             return false;
         } else {
@@ -137,11 +129,10 @@ class AuthBackend_MYSQL extends Backend_MYSQL
             $str = "%$str%";
 
             // Return should be a list of account names; nothing more.
-            $result = $this->db->getCol("SELECT username FROM accounts WHERE username ".
-                                        "LIKE ? ORDER BY username",
+            $result = $this->db->getCol('SELECT username FROM accounts WHERE username LIKE ? ORDER BY username',
                                         0, array($str));
         } else {
-            $result = $this->db->getCol("SELECT username FROM accounts ORDER BY username", 0);
+            $result = $this->db->getCol('SELECT username FROM accounts ORDER BY username', 0);
         }
 
         if (PEAR::isError($result)) {
@@ -165,6 +156,11 @@ class AuthBackend_LDAP extends Backend_LDAP
     	if ($username == null) {
     		return false;
     	}
+
+		$ldap_user = $this->get_ldap_user($username);
+		if ($ldap_user != null) {
+			return $this->authenticate($username, $password);
+		}
 
 		$ldaprecord_dn = 'cn=' . $username . ',ou=People,' . $this->base_dn;
 		
