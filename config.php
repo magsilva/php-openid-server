@@ -37,7 +37,7 @@ define('MIN_PASSWORD_LENGTH', 6);
  * In either case, the ADMIN_USERNAME account specified below will be
  * able to log in to create and remove accounts.
  */
-define('ALLOW_PUBLIC_REGISTRATION', false);
+define('ALLOW_PUBLIC_REGISTRATION', true);
 
 /**
  * Set these values for administrative access.  This account will be

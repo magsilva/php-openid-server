@@ -51,50 +51,105 @@ class Storage_MYSQL extends Backend_MYSQL
                                  'language VARCHAR(32)',
                                  'timezone VARCHAR(255)');
 
-        $personas = "CREATE TABLE personas (id INTEGER AUTO_INCREMENT ".
-            "NOT NULL PRIMARY KEY, ".
-            "account VARCHAR(255) NOT NULL, ".implode(", ", $sreg_fields_sql).")";
+        $personas = 'CREATE TABLE personas (' .
+        				'account VARCHAR(255) NOT NULL PRIMARY KEY, ' .
+		        		implode(', ', $sreg_fields_sql) .
+		        		')';
+
+		$identities = 'CREATE TABLE identities (' .
+						'account VARCHAR(255) NOT NULL, ' .
+                        'url VARCHAR(512) NOT NULL, '.
+                        'PRIMARY KEY (account, url)' .
+                        ')';
+
+		$sites =  'CREATE TABLE sites (' .
+						'account VARCHAR(255) NOT NULL, '.
+                        'trust_root VARCHAR(512) NOT NULL, ' .
+                        'sso_url VARCHAR(512), ' .
+                        'trust_level INTEGER, ' .
+                        'PRIMARY KEY (account, trust_root)' .
+                        ')';
+                        
+        $domains = 'CREATE TABLE domains (' .
+        				'domain VARCHAR(255) NOT NULL, ' .
+        				'element_trust_root VARCHAR(512) NOT NULL, ' .
+        				'PRIMARY KEY (domain, element_trust_root)' .
+        				')';
 
         // Create tables for OpenID storage backend.
         $tables = array(
-                        "CREATE TABLE identities (id INTEGER AUTO_INCREMENT ".
-                        "NOT NULL PRIMARY KEY, ".
-                        "account VARCHAR(255) NOT NULL, url TEXT NOT NULL, ".
-                        "UNIQUE (account, url(255)))",
+                      $identities,
+                      $personas,
+                      $sites,
+                      $domains);
 
-                        $personas,
-
-                        "CREATE TABLE sites (account VARCHAR(255) NOT NULL, ".
-                        "trust_root TEXT, trusted BOOLEAN, ".
-                        "UNIQUE (account, trust_root(255)))"
-                        );
-
+		$this->log->debug('Creating tables ' . implode(', ', $tables));
         foreach ($tables as $t) {
             $result = $this->db->query($t);
+            $this->log->debug("Created table $t");
         }
     }
 
+	function __trustLog($account, $trust_root, $trusted)
+	{
+		$trust_level = 0;
+		$current_level = $this->db->getOne(
+			'SELECT trust_level FROM sites WHERE account = ? AND trust_root = ?',
+    		array($account, $trust_root));
+    	
+    	if (! empty($current_level)) {
+    		$trust_level = $current_level;
+    	}
+    	
+    	if ($trusted) {
+    		$trust_level++;
+    	} else {
+    		$trust_level--;
+    	}
+    	if ($trust_level < 0) {
+    		$trust_level = 0;
+    	}
+
+       	$this->db->query(
+				'INSERT INTO sites (account, trust_root, trust_level) VALUES (?, ?, ?)',
+            	array($account, $trust_root, $trust_level));
+	
+		$this->db->query('UPDATE sites SET trust_level = ? WHERE account = ? AND trust_root = ?',
+        		array($trusted, $trust_root, $trust_level));
+        		
+		$this->log->info("Changed the trust level of $site, for user $account, to $trust_level");
+	}
+	
     function trustLog($account, $trust_root, $trusted)
     {
-        // Try to create a record every time.  This might fail, which
-        // is ok.
-        $this->db->query("INSERT INTO sites (account, trust_root, trusted) VALUES (?, ?, ?)",
-                         array($account, $trust_root, $trusted));
-
-        $this->db->query("UPDATE sites SET trusted = ? WHERE account = ? AND trust_root = ?",
-                         array($trusted, $account, $trust_root));
+    	$this->__trustLog($account, $trust_root, $trusted);
+    	   
+        $result = $this->db->getAll('SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?', array($trust_root));
+		if (! empty($result)) {
+           	$this->log->info("Propagating $trust_root's trust change to " . implode(', ', $result));
+    		foreach ($result as $site) {
+    			$this->__trustLog($account, $site['domain'], $trusted);
+	   		}
+		}
     }
 
     function removeTrustLog($account, $trust_root)
     {
-        $this->db->query("DELETE FROM sites WHERE account = ? AND trust_root = ?",
-                         array($account, $trust_root));
+    	$this->__trustLog($account, $trust_root, false);
+    	   
+        $result = $this->db->getAll('SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?', array($trust_root));
+		if (! empty($result)) {
+           	$this->log->info("Propagating $trust_root's trust change to " . implode(', ', $result));
+    		foreach ($result as $site) {
+    			$this->__trustLog($account, $site, false);
+	   		}
+		}
     }
 
     function isTrusted($account, $trust_root)
     {
-        $result = $this->db->getOne("SELECT trusted FROM sites WHERE account = ? AND ".
-                                    "trust_root = ? AND trusted",
+        $result = $this->db->getOne('SELECT trusted FROM sites WHERE account = ? AND '.
+                                    'trust_root = ? AND trusted',
                                     array($account, $trust_root));
 
         if (PEAR::isError($result)) {
@@ -106,19 +161,19 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function getSites($account)
     {
-        return $this->db->getAll("SELECT trust_root, trusted FROM sites WHERE account = ?",
+        return $this->db->getAll('SELECT trust_root, trusted FROM sites WHERE account = ?',
                                  array($account));
     }
 
     function addIdentifier($account, $identifier)
     {
-        $this->db->query("INSERT INTO identities (account, url) VALUES (?, ?)",
+        $this->db->query('INSERT INTO identities (account, url) VALUES (?, ?)',
                          array($account, $identifier));
     }
 
     function getAccountForUrl($identifier)
     {
-        $result = $this->db->getOne("SELECT account FROM identities WHERE url = ?",
+        $result = $this->db->getOne('SELECT account FROM identities WHERE url = ?',
                                     array($identifier));
 
         if (PEAR::isError($result)) {
@@ -130,7 +185,7 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function getUrlsForAccount($account)
     {
-        $result = $this->db->getCol("SELECT url FROM identities WHERE account = ?",
+        $result = $this->db->getCol('SELECT url FROM identities WHERE account = ?',
                                     0, array($account));
 
         if (PEAR::isError($result)) {
@@ -142,9 +197,9 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function removeAccount($account)
     {
-        $this->db->query("DELETE FROM identities WHERE account = ?", array($account));
-        $this->db->query("DELETE FROM personas WHERE account = ?", array($account));
-        $this->db->query("DELETE FROM sites WHERE account = ?", array($account));
+        $this->db->query('DELETE FROM identities WHERE account = ?', array($account));
+        $this->db->query('DELETE FROM personas WHERE account = ?', array($account));
+        $this->db->query('DELETE FROM sites WHERE account = ?', array($account));
     }
 
     function savePersona($account, $profile_data)
@@ -159,9 +214,6 @@ class Storage_MYSQL extends Backend_MYSQL
             }
         }
 
-        // Save profile.  First, get a persona ID.
-        $persona_id = $this->_getPersonaId($account);
-
         // Update the persona record.
         $field_bits = array();
         $values = array();
@@ -170,44 +222,19 @@ class Storage_MYSQL extends Backend_MYSQL
             $values[] = $v;
         }
 
-        $values[] = $persona_id;
-
-        $result = $this->db->query("UPDATE personas SET ".
-                                   implode(", ", $field_bits).
-                                   " WHERE id = ?", $values);
-    }
-
-    function _getPersonaId($account)
-    {
-        $pid = $this->db->getOne("SELECT id FROM personas WHERE account = ?",
-                                 array($account));
-
-        if (PEAR::isError($pid) || ! $pid) {
-            $pid = $this->_createEmptyPersona($account);
-        }
-
-        return $pid;
-    }
-
-    function _createEmptyPersona($account)
-    {
-        $pid = $this->db->nextId('personas_id', true);
-
-        $this->db->query("INSERT INTO personas (id, account) VALUES (?, ?)",
-                         array($pid, $account));
-
-        return $pid;
+		$values[] = $account;
+        $result = $this->db->query('UPDATE personas SET '.
+                                   implode(', ', $field_bits).
+                                   ' WHERE account = ?', $values);
     }
 
     function getPersona($account)
     {
         global $sreg_fields;
 
-        $persona_id = $this->_getPersonaId($account);
-
-        $result = $this->db->getRow("SELECT ".implode(", ", $sreg_fields).
-                                    " FROM personas WHERE id = ?",
-                                    array($persona_id));
+        $result = $this->db->getRow('SELECT ' . implode(', ', $sreg_fields).
+                                    ' FROM personas WHERE account = ?',
+                                    array($account));
 
         if (PEAR::isError($result)) {
             return null;

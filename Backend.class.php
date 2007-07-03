@@ -34,6 +34,13 @@ require_once('xmpp/xep-0070.php');
  */
 class Backend
 {
+	var $log;
+	
+	function Backend()
+	{
+		$this->log = &Logging::instance();
+	}
+	
 	/**
 	 * Connect to the data storage area.
 	 * 

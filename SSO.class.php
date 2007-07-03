@@ -14,40 +14,18 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
-Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2005 JanRain, Inc.
 */
 
-class Action
-{
-	var $auth;
+class SSO {
 
-	var $controller;
-	
-	var $openid_server;
-	
-	var $server;
-
-	var $storage;
-	
-	var $template;
-	
-	var $sso;
-	
-	
-	function Action(&$controller)
-	{
-		$this->controller =& $controller;
-		$this->server =& $this->controller->server;
-		$this->auth =& $this->server->auth_backend;
-		$this->openid_server =& $this->server->openid_server;
-		$this->storage =& $this->server->storage_backend;
-		$this->template =& $this->controller->template_engine;
-		$this->sso =& $this->controller->sso;
-		
-		$this->log = &Logging::instance();
-	}
-	
-	function process($method, &$request) {}
+    function SSO()
+    {
+    }
+    
+    function startSession($account, $openid_identity)
+    {
+	    setcookie(COOKIE_NAME, $openid_identity . __LINE__);
+    }
 }
-
 ?>

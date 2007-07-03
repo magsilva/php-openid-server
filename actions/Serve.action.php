@@ -44,20 +44,22 @@ class Serve extends Action
 	        $urls = array();
 	        
 	        $account = $this->server->getAccount();
-	        if ($account) {
+	        if ($account != null) {
 	            $urls = $this->storage->getUrlsForAccount($account);
 	        }
 	        $openid_identity = $request->identity;
 	        $expected_account = $this->storage->getAccountForUrl($request->identity);
 	
-	        if ($request->immediate && ! $account) {
+			$this->log->debug($request);
+			$this->log->debug($account);
+	        if ($request->immediate && $account == null) {
 				$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated");
 	            $response =& $request->answer(false, $this->controller->getServerURL());
-	        } else if ($account &&
+	        } else if ($account != null &&
 	                   $this->storage->isTrusted($account, $request->trust_root) &&
 	                   in_array($request->identity, $urls)) {
 				$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
-				setcookie(COOKIE_NAME, $openid_identity);
+				$this->sso->startSession($account, $openid_identity);
 				$response =& $request->answer(true);
 				$this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	        } else if ($account != $this->storage->getAccountForUrl($request->identity)) {
@@ -71,12 +73,12 @@ class Serve extends Action
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {
 					$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
-					setcookie(COOKIE_NAME, $openid_identity);
+					$this->sso->startSession($account, $openid_identity);
 	                $response =& $request->answer(true);
 	                $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	            } else {
 	            	$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' isn't trusted");
-					setcookie(COOKIE_NAME, $openid_identity);
+					$this->sso->startSession($account, $openid_identity);
 	                $this->controller->redirect('trust');
 	            }
 	        }

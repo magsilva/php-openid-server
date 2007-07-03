@@ -17,6 +17,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
+require_once('SSO.class.php');
+
 class Controller
 {
 	var $template_engine;
@@ -27,9 +29,12 @@ class Controller
 	
 	var $storage;
 	
+	var $sso;
+	
 	function Controller()
 	{
 		$this->log = &Logging::instance();
+		$this->sso = new SSO();
 	}
 	
 	function setServer($server)
@@ -129,14 +134,14 @@ class Controller
 			case E_COMPILE_ERROR:
 			case E_COMPILE_WARNING:
 				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				print_r(debug_backtrace());
+				// print_r(debug_backtrace());
 				$this->template_engine->addError($errstr);
 				exit();
 				break;
 		
 			case E_USER_ERROR:
 				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				print_r(debug_backtrace());
+				// print_r(debug_backtrace());
 			    $this->template_engine->addError($errstr);
 			    exit();
 				break;
@@ -144,7 +149,7 @@ class Controller
 			case E_USER_WARNING:
 			case E_USER_NOTICE:
 				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				print_r(debug_backtrace());
+				// print_r(debug_backtrace());
 				$this->template_engine->addError($errstr);
 				exit();
 			
@@ -311,7 +316,7 @@ class Controller
 			list($filename, $clsname) = $handler;
 			require_once($filename);
 			$action = new $clsname($this);
-			$this->log->info("Handing over the job the the handler '$clsname'");
+			$this->log->info("Handing over the job to the handler '$clsname'");
 			$action->process($method, $request);
 		} else {
 			$this->log->info("No suitable handler found for action '$action', redirecting to the main page.");

@@ -55,7 +55,7 @@ $log->info('Template engine initialized');
 set_error_handler(array($controller, 'handleError'));
 $log->info('Handed over the error handling to the application controller');
 
-$log->info('Handing over the request processment to the controller. Gambate!');
+$log->info('Handing over the request processment to the controller.');
 $controller->processRequest();
 
 ?>
