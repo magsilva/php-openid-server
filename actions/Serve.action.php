@@ -59,7 +59,6 @@ class Serve extends Action
 	                   $this->storage->isTrusted($account, $request->trust_root) &&
 	                   in_array($request->identity, $urls)) {
 				$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
-				$this->sso->startSession($account, $openid_identity);
 				$response =& $request->answer(true);
 				$this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	        } else if ($account != $this->storage->getAccountForUrl($request->identity)) {
@@ -73,12 +72,10 @@ class Serve extends Action
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {
 					$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
-					$this->sso->startSession($account, $openid_identity);
 	                $response =& $request->answer(true);
 	                $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	            } else {
 	            	$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' isn't trusted");
-					$this->sso->startSession($account, $openid_identity);
 	                $this->controller->redirect('trust');
 	            }
 	        }

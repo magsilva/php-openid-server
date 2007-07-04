@@ -17,8 +17,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-require_once('SSO.class.php');
-
 class Controller
 {
 	var $template_engine;
@@ -34,7 +32,6 @@ class Controller
 	function Controller()
 	{
 		$this->log = &Logging::instance();
-		$this->sso = new SSO();
 	}
 	
 	function setServer($server)

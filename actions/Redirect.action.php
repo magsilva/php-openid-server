@@ -14,18 +14,22 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
-Copyright (C) 2005 JanRain, Inc.
+Copyright (C) 2007 Marco Aurélio Graciotto Silva
 */
 
-class SSO {
 
-    function SSO()
-    {
-    }
-    
-    function startSession($account, $openid_identity)
-    {
-	    setcookie(COOKIE_NAME, $openid_identity . __LINE__);
-    }
+require_once('Action.class.php');
+
+class Redirect extends Action
+{
+	function process($method, &$request)
+	{
+		$response = $_SESSION['response'];
+		$response = $request_info->answer(true);
+	    $this->controller->setRequestInfo();
+	    $this->controller->handleResponse($response);
+	}
 }
+
+
 ?>

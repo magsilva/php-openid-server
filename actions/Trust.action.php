@@ -30,11 +30,12 @@ class Trust extends Action
 	    $account = $this->server->getAccount();
 	    list($request_info, $sreg) = $this->controller->getRequestInfo();
 	
-	    if (! $request_info) {
+	    if ($request_info === FALSE) {
 	        $this->controller->redirect();
 	    }
 	
 	    $urls = $this->storage->getUrlsForAccount($account);
+	    $openid_identity = $request->identity;
 	
 	    if (! in_array($request_info->identity, $urls)){
 	        $this->server->clearAccount();
@@ -47,33 +48,45 @@ class Trust extends Action
 	    if ($method == 'POST') {
 	        $trusted = false;
 	        if (isset($request['trust_forever'])) {
-	            $this->storage->trustLog($this->server->getAccount(), $request_info->trust_root, true);
+	            $this->storage->trustLog($account, $request_info->trust_root, true);
+	            $this->log->info("User $account trusts $request_info->trust_root forever");
 	            $trusted = true;
 	        } else if (isset($request['trust_once'])) {
-	            $this->storage->trustLog($this->server->getAccount(), $request_info->trust_root, false);
+	            $this->storage->trustLog($account, $request_info->trust_root, false);
+	            $this->log->info("User $account trusts $request_info->trust_root just this time");
 	            $trusted = true;
 	        } else {
-	            $this->storage->trustLog($this->server->getAccount(), $request_info->trust_root, false);
+	            $this->storage->trustLog($account, $request_info->trust_root, false);
+	            $this->log->info("User $account doesn't trust $request_info->trust_root");
 	        }
 	
 	        if ($trusted) {
+	        	// Get requested user data.
 	            $allowed_fields = array();
-	
 	            if (array_key_exists('sreg', $request)) {
 	                $allowed_fields = array_keys($request['sreg']);
 	            }
-	
 	            $response = $request_info->answer(true);
 	            $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
+	            
+	            // Propagate the cookies
+	            // TODO: Check if the user agent has changed (so that we don't have to issue
+	            // a cookie
+	            $sites = $this->storage->getRelatedSites($request_info->trust_root);
+			    $this->template->assign('trust_root', $request_info->trust_root);
+		    	$this->template->assign('identity', $request_info->identity);
+	            $this->template->assign('related_sites', $sites);
+			    $this->template->display('redirect.tpl');
+	            $_SESSION['response'] = $response;
+	            
 	        } else {
 	            $response = $request_info->answer(false);
+	            $this->controller->setRequestInfo();
+	        	$this->controller->handleResponse($response);
 	        }
-	
-	        $this->controller->setRequestInfo();
-	        $this->controller->handleResponse($response);
 	    }
 	
-	    if ($sreg) {
+	    if ($sreg != FALSE) {
 	        // Get the profile data and mark it up so it's easy to tell
 	        // what's required and what's optional.
 	        $profile = $this->storage->getPersona($account);

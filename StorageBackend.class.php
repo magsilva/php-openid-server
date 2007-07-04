@@ -117,20 +117,44 @@ class Storage_MYSQL extends Backend_MYSQL
 		$this->db->query('UPDATE sites SET trust_level = ? WHERE account = ? AND trust_root = ?',
         		array($trusted, $trust_root, $trust_level));
         		
-		$this->log->info("Changed the trust level of $site, for user $account, to $trust_level");
+		$this->log->info("Changed the trust level of $trust_root, for user $account, to $trust_level");
+	}
+
+    function getRelatedDomains($trust_root)
+    {
+        $result = $this->db->getAll('SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?', array($trust_root));
+        $domains = array();
+   		foreach ($result as $domain) {
+           	$domains[] = $domain['domain'];
+		}
+		return $domains;
+    }
+
+	function getRelatedSites($trust_root)
+	{
+		$domains = $this->getRelatedDomains($trust_root);
+		$sites = array();
+		foreach ($domains as $domain) {
+			$sites[$domain] = array();
+			$result = $this->db->getAll('SELECT DISTINCT trust_root, sso_url FROM domains,sites WHERE element_trust_root = trust_root AND domain = ?', array($domain));
+			foreach ($result as $site) {
+				$sites[$domain][$site['trust_root']] = $site['sso_url'];
+			}
+		}	
+		return $sites;	
 	}
 	
     function trustLog($account, $trust_root, $trusted)
     {
     	$this->__trustLog($account, $trust_root, $trusted);
-    	   
-        $result = $this->db->getAll('SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?', array($trust_root));
-		if (! empty($result)) {
-           	$this->log->info("Propagating $trust_root's trust change to " . implode(', ', $result));
-    		foreach ($result as $site) {
-    			$this->__trustLog($account, $site['domain'], $trusted);
-	   		}
-		}
+    
+    	$domains_N_sites = $this->getRelatedSites($trust_root); 
+    	foreach ($domains_N_sites as $sites) {
+	    	foreach ($sites as $site) {
+				$this->log->info("Propagating $trust_root's trust change to $site");
+				$this->__trustLog($account, $site, $trusted);
+			}
+    	}
     }
 
     function removeTrustLog($account, $trust_root)
