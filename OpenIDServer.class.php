@@ -23,8 +23,8 @@ require_once('common.php');
 require_once('AuthBackend.class.php');
 require_once('StorageBackend.class.php');
 
-require_once('Auth/OpenID/Server.php');
-require_once('Auth/OpenID/MySQLStore.php');
+require_once('openid/Auth/OpenID/Server.php');
+require_once('openid/Auth/OpenID/MySQLStore.php');
 
 
 class OpenIDServer
