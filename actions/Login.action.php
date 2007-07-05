@@ -80,7 +80,6 @@ class Login extends Action
 	        }
 	    }
 	
-	    $this->template->assign('onload_js', 'document.forms.loginform.username.focus();');
 	    $this->template->display('login.tpl');
 	}
 }

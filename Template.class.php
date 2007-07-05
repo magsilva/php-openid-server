@@ -19,7 +19,7 @@ Copyright (C) 2005 JanRain, Inc.
 
 require_once('config.php');
 require_once('common.php');
-require_once('smarty/libs/Smarty.class.php');
+require_once('smarty/Smarty.class.php');
 
 
 /**
