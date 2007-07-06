@@ -1,3 +1,5 @@
+- Corrigir o uso do banco de dados (em especial quando ocorrem erros).
+- Usar criptografia no cookie.
 - Login deve ser possível tanto com a URL de OpenID quanto com o nome do usuário.
 - Revisar as páginas de template.
 - Arrumar o template de 'redirect'. Ele deve redirecionar automaticamente para a página

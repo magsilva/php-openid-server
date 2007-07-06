@@ -76,8 +76,12 @@ class Trust extends Action
 			    $this->template->assign('trust_root', $request_info->trust_root);
 		    	$this->template->assign('identity', $request_info->identity);
 	            $this->template->assign('related_sites', $sites);
+	            $this->template->assign('action', 'redirect');
+	            $this->template->assign('redirect_html', $this->controller->getServerURL() . '?action=redirect');
+	            	            
 			    $this->template->display('redirect.tpl');
 	            $_SESSION['response'] = $response;
+	            return;
 	            
 	        } else {
 	            $response = $request_info->answer(false);

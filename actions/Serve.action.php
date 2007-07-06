@@ -49,11 +49,9 @@ class Serve extends Action
 	        }
 	        $openid_identity = $request->identity;
 	        $expected_account = $this->storage->getAccountForUrl($request->identity);
-	
-			$this->log->debug($request);
-			$this->log->debug($account);
+
 	        if ($request->immediate && $account == null) {
-				$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated");
+				$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated (and, as an immediate authentication was requested, it completely failed)");
 	            $response =& $request->answer(false, $this->controller->getServerURL());
 	        } else if ($account != null &&
 	                   $this->storage->isTrusted($account, $request->trust_root) &&
@@ -62,12 +60,14 @@ class Serve extends Action
 				$response =& $request->answer(true);
 				$this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	        } else if ($account != $this->storage->getAccountForUrl($request->identity)) {
-				$this->log->info("User '$account' ($openid_identity) isn't authenticated");
+	        	$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated");
 	            $this->server->clearAccount();
 	            $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
 	            $http_request['action'] = 'trust';
 			    if ($this->server->needAuth($http_request)) {
 			    	$this->controller->redirectWithLogin($http_request);
+			    } else {
+			    	$this->controller->redirect($http_request);
 			    }
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {

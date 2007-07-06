@@ -3,6 +3,8 @@
 /**
  * The configuration settings for the PHP OpenID Server.
  */
+define('CREATE_DATABASE', false);
+
 
 /**
  * The site title; this will appear at the top and bottom of each
@@ -109,6 +111,6 @@ define('LOG_FILENAME', dirname(__FILE__) . '/out.log');
  * PEAR_LOG_INFO Informational
  * PEAR_LOG_DEBUG Debug-level messages
  */
-define('LOG_ERROR_LEVEL', PEAR_LOG_DEBUG);
+define('LOG_ERROR_LEVEL', PEAR_LOG_INFO);
 
 ?>

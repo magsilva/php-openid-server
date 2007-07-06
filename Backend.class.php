@@ -78,7 +78,9 @@ class Backend_MYSQL extends Backend
             $this->db->setFetchMode(DB_FETCHMODE_ASSOC);
             $this->db->autoCommit(true);
             if (! PEAR::isError($this->db)) {
-            	$this->_init();
+            	if (CREATE_DATABASE) {
+            		$this->_init();
+            	}
             	return true;
             }
         }

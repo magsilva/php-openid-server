@@ -39,10 +39,18 @@ class Login extends Action
 	                $this->controller->redirect();
 	            } else if (($u != ADMIN_USERNAME) &&  $this->auth->authenticate($u, $p)) {
 	                $this->server->setAccount($u);
+	
+					$return_to = null;
+					if (array_key_exists('return_to', $request)) {
+				        $return_to = html_entity_decode($request['return_to']);
+				    }
+					if (array_key_exists('openid_return_to', $request)) {
+				        $return_to = html_entity_decode($request['openid_return_to']);
+				    }
 	                	
 	                if (array_key_exists('next_action', $request)) {
 	                    $action = $request['next_action'];
-						$this->controller->redirect($action);
+						$this->controller->redirect(null, $action, null, $return_to);
 	                } else {
 	                	$this->controller->redirect();
 	                }
@@ -51,12 +59,18 @@ class Login extends Action
 	                $this->template->addError('The confirmation request was rejected, or timed out.');
 	            }
 			} else {
-				$template->addError('Please fill in all the available fields.');
+				$this->template->addError('Please fill in all the available fields.');
 			}
 	    }
 	
 	    if (array_key_exists('next_action', $request)) {
 	        $this->template->assign('next_action', $request['next_action']);
+	    }
+		if (array_key_exists('return_to', $request)) {
+	        $this->template->assign('return_to', $request['return_to']);
+	    }
+		if (array_key_exists('openid_return_to', $request)) {
+	        $this->template->assign('return_to', $request['openid_return_to']);
 	    }
 	
 	    list($info, $sreg) = $this->controller->getRequestInfo();

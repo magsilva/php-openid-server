@@ -3,9 +3,9 @@
 
 <h3>Account Search</h3>
 <form method="post" action="{$SERVER_URL}">
-<input type="hidden" name="action" value="admin">
-<input type="text" name="search"> <input type="submit" value="Search Accounts">
-<input type="submit" name="showall" value="Show All">
+	<input type="hidden" name="action" value="admin">
+	<input type="text" name="search"> <input type="submit" value="Search Accounts">
+	<input type="submit" name="showall" value="Show All">
 </form>
 
 {if $search || $showall}

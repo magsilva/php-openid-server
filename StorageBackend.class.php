@@ -114,7 +114,8 @@ class Storage_MYSQL extends Backend_MYSQL
 				'INSERT INTO sites (account, trust_root, trust_level) VALUES (?, ?, ?)',
             	array($account, $trust_root, $trust_level));
 	
-		$this->db->query('UPDATE sites SET trust_level = ? WHERE account = ? AND trust_root = ?',
+		$this->db->query(
+				'UPDATE sites SET trust_level = ? WHERE account = ? AND trust_root = ?',
         		array($trusted, $trust_root, $trust_level));
         		
 		$this->log->info("Changed the trust level of $trust_root, for user $account, to $trust_level");
@@ -122,7 +123,10 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function getRelatedDomains($trust_root)
     {
-        $result = $this->db->getAll('SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?', array($trust_root));
+        $result = $this->db->getAll(
+			'SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?',
+			array($trust_root));
+			
         $domains = array();
    		foreach ($result as $domain) {
            	$domains[] = $domain['domain'];
@@ -136,7 +140,10 @@ class Storage_MYSQL extends Backend_MYSQL
 		$sites = array();
 		foreach ($domains as $domain) {
 			$sites[$domain] = array();
-			$result = $this->db->getAll('SELECT DISTINCT trust_root, sso_url FROM domains,sites WHERE element_trust_root = trust_root AND domain = ?', array($domain));
+			$result = $this->db->getAll(
+				'SELECT DISTINCT trust_root, sso_url FROM domains,sites WHERE element_trust_root = trust_root AND domain = ?',
+				array($domain));
+				
 			foreach ($result as $site) {
 				$sites[$domain][$site['trust_root']] = $site['sso_url'];
 			}
@@ -161,7 +168,10 @@ class Storage_MYSQL extends Backend_MYSQL
     {
     	$this->__trustLog($account, $trust_root, false);
     	   
-        $result = $this->db->getAll('SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?', array($trust_root));
+        $result = $this->db->getAll(
+			'SELECT DISTINCT domain FROM domains WHERE element_trust_root = ?',
+			array($trust_root));
+			
 		if (! empty($result)) {
            	$this->log->info("Propagating $trust_root's trust change to " . implode(', ', $result));
     		foreach ($result as $site) {
@@ -172,9 +182,9 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function isTrusted($account, $trust_root)
     {
-        $result = $this->db->getOne('SELECT trusted FROM sites WHERE account = ? AND '.
-                                    'trust_root = ? AND trusted',
-                                    array($account, $trust_root));
+        $result = $this->db->getOne(
+			'SELECT trusted FROM sites WHERE account = ? AND trust_root = ? AND trusted',
+			array($account, $trust_root));
 
         if (PEAR::isError($result)) {
             return false;
@@ -185,20 +195,23 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function getSites($account)
     {
-        return $this->db->getAll('SELECT trust_root, trusted FROM sites WHERE account = ?',
-                                 array($account));
+        return $this->db->getAll(
+			'SELECT trust_root, trusted FROM sites WHERE account = ?',
+			array($account));
     }
 
     function addIdentifier($account, $identifier)
     {
-        $this->db->query('INSERT INTO identities (account, url) VALUES (?, ?)',
-                         array($account, $identifier));
+        $this->db->query(
+			'INSERT INTO identities (account, url) VALUES (?, ?)',
+			array($account, $identifier));
     }
 
     function getAccountForUrl($identifier)
     {
-        $result = $this->db->getOne('SELECT account FROM identities WHERE url = ?',
-                                    array($identifier));
+        $result = $this->db->getOne(
+			'SELECT account FROM identities WHERE url = ?',
+			array($identifier));
 
         if (PEAR::isError($result)) {
             return null;
@@ -209,8 +222,10 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function getUrlsForAccount($account)
     {
-        $result = $this->db->getCol('SELECT url FROM identities WHERE account = ?',
-                                    0, array($account));
+        $result = $this->db->getCol(
+			'SELECT url FROM identities WHERE account = ?',
+			0,
+			array($account));
 
         if (PEAR::isError($result)) {
             return null;
@@ -221,9 +236,15 @@ class Storage_MYSQL extends Backend_MYSQL
 
     function removeAccount($account)
     {
-        $this->db->query('DELETE FROM identities WHERE account = ?', array($account));
-        $this->db->query('DELETE FROM personas WHERE account = ?', array($account));
-        $this->db->query('DELETE FROM sites WHERE account = ?', array($account));
+        $this->db->query(
+			'DELETE FROM identities WHERE account = ?',
+			array($account));
+        $this->db->query(
+			'DELETE FROM personas WHERE account = ?',
+			array($account));
+        $this->db->query(
+			'DELETE FROM sites WHERE account = ?',
+			array($account));
     }
 
     function savePersona($account, $profile_data)
@@ -247,18 +268,18 @@ class Storage_MYSQL extends Backend_MYSQL
         }
 
 		$values[] = $account;
-        $result = $this->db->query('UPDATE personas SET '.
-                                   implode(', ', $field_bits).
-                                   ' WHERE account = ?', $values);
+        $result = $this->db->query(
+			'UPDATE personas SET '. implode(', ', $field_bits). ' WHERE account = ?',
+			$values);
     }
 
     function getPersona($account)
     {
         global $sreg_fields;
 
-        $result = $this->db->getRow('SELECT ' . implode(', ', $sreg_fields).
-                                    ' FROM personas WHERE account = ?',
-                                    array($account));
+        $result = $this->db->getRow(
+			'SELECT ' . implode(', ', $sreg_fields). ' FROM personas WHERE account = ?',
+			array($account));
 
         if (PEAR::isError($result)) {
             return null;

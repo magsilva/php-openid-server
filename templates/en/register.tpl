@@ -1,10 +1,7 @@
-
 <fieldset>
 <legend>New Account</legend>
 
-<p class="justified">
-Fill out the form below to create an OpenID.
-</p>
+<p class="justified">Fill out the form below to create an OpenID.</p>
 
 <form method="post" action="{$SERVER_URL}">
 <input type="hidden" name="action" value="register">

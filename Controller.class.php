@@ -249,10 +249,10 @@ class Controller
 	}
 
 	
-	function redirect($url = null, $action = null, $next_action = null)
+	function redirect($url = null, $action = null, $next_action = null, $return_to = null)
 	{
 		// If we didn't assigned an URL, the $url actually has the action.		
-		if (strpos($url, 'http') === FALSE || strpos($url, 'http') != 0) {
+		if ($url != null && (strpos($url, 'http') === FALSE || strpos($url, 'http') != 0)) {
 			// And, if our $url is the action, then $action is the $next_action.
 			if ($action != null) {
 				$next_actions = $action;
@@ -274,10 +274,13 @@ class Controller
 	        }
 	    }
 	    
-	    if ($next_actions != null) {
+	    if ($next_action != null) {
 	    	$url .= '&next_action=' . $next_action;
 	    }
 
+		if ($return_to != null) {
+			$url .= '&return_to=' . htmlentities($return_to);
+		}
 
 	    if ($action != null && isset($_GET['lang'])) {
 	        if (strpos($url, '?') === false) {
@@ -287,19 +290,30 @@ class Controller
 	        }
 	    }
 
+		$this->log->info("Redirecting to action '$action', next action is '$next_action', and return URL is '$return_to' ($url)");
 	    header('Location: ' . $url);
 	    exit(0);
 	}
 	
-	function redirectWithLogin($action)
+	function redirectWithLogin($request)
 	{
-		if (is_array($action)) {
-			$action = $action['action'];
+		if (is_array($request)) {
+			$action = $request['action'];
+			$return_to = $request['return_to'];
+			if (array_key_exists('openid_return_to', $request)) {
+				$return_to = $request['openid_return_to'];
+			}
+			if (array_key_exists('return_to', $request)) {
+				$return_to = $request['return_to'];
+			}
 		}
-		$this->redirect('login', $action);		
+		$this->log->info("Redirecting with login to '$action'");
+		$this->redirect(null, 'login', $action, $return_to);		
 	}
 	
-	function redirectWithAdmin($action) {
+	function redirectWithAdmin($action)
+	{
+		$this->log->info("Redirecting requiring admin privileges to '$action'");
 		$this->redirect();
 	}
 	
