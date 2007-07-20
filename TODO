@@ -1,9 +1,5 @@
-- Corrigir o uso do banco de dados (em especial quando ocorrem erros).
+- Adicionar função de logout (que apague os cookies de todas as aplicações do
+domínio).
 - Usar criptografia no cookie.
-- Login deve ser possível tanto com a URL de OpenID quanto com o nome do usuário.
-- Revisar as páginas de template.
-- Arrumar o template de 'redirect'. Ele deve redirecionar automaticamente para a página
-destino original (na verdade, temos de disparar a ação 'Redirect' [?action=redirect]).
 - Create user information on the fly if the LDAP authentication succeeds.
-- Create a PHP script that set the cookie for every application in a trusted domain. Esse script deve ser padronizado para cada aplicação (o trust_handler deve existir e seguir o padrão). Não temos muito a fazer, se não redirecionar o usuário pelos sites. Talvez um bate e volta entre eles e o servidor até que todos os sites do domínio sejam visitados. A tela intermediária pode avisar o usuário do processo em execução (inclusive indicando os sites que foram atualizados). Nós precisamos fazer os redirecionamentos porque esta é a única forma de transferir o cookie. Seria bom termos alguma característica de segurança (como uma chave, ver Microsoft Passport) para fazer uma comunicação mais segura. Talvez esse endereço possa ser descrito no XRDS!!!
-
+- Create test cases.
