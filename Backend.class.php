@@ -26,6 +26,7 @@ Copyright (C) 2005 JanRain, Inc.
 require_once('DB.php');
 require_once('xmpp/xep-0070.php');
 
+require_once('adLDAP.php');
 
 /**
  * Data storage area. We don't worry, for now, about data creation and 
@@ -176,6 +177,54 @@ class Backend_LDAP extends Backend
     	return true;
     }
 }
+
+
+/**
+ * A storage area implemented using an ActiveDirectory.
+ * 
+ * Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+ */
+class Backend_ActiveDirectory extends Backend
+{
+	var $ad;	
+
+	/**
+	 * Connect to a LDAP server.
+	 * 
+	 * @param $arguments Array Parameters used to connect to the storage area.
+	 * The expected array's keys are 'server_name' (the LDAP server hostname
+	 * or IP address), 'base_dn' (the root directory), 'bind_username' (user
+	 * to use when binding, the default is null), 'bind_password' (binding
+	 * user's password, the default is null), 'admin_username' (user to use
+	 * when creating or modifying user information), 'admin_password' (admin
+	 * user's password), 'user_filter' (format string used for searching users
+	 * within the LDAP repository, the default is '(uid=% USERNAME%)').
+	 */
+	function connect($arguments)
+	{
+		$options = array();
+		// $options['account_suffix'] = '';
+		$options['base_dn'] = $arguments['base_dn'];
+		$options['domain_controllers'] = array($arguments['server_name']);
+		 
+		if (isset($arguments['admin_username'])) {
+			$options['ad_username'] = $arguments['admin_username'];
+		}
+		if (isset($arguments['admin_password'])) {
+			$options['ad_password'] = $arguments['admin_password'];
+		}
+		$options['use_ssl'] = true;
+		$this->ad = new adLDAP($options);
+
+    	if ($this->ad == NULL) {
+    		return FALSE;
+    	} else {
+    		return TRUE;
+    	}
+    }
+}
+
+
 
 class Backend_XMPP
 {

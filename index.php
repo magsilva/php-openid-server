@@ -32,6 +32,11 @@ require_once('Template.class.php');
 require_once('OpenIDServer.class.php');
 require_once('Controller.class.php');
 
+
+//force the browser to use ssl (STRONGLY RECOMMENDED!!!!!!!!)
+// if ($_SERVER["SERVER_PORT"]!=443){ header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']); exit(); }
+
+
 $log = &Logging::instance();
 
 $controller = new Controller();
