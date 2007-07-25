@@ -356,34 +356,19 @@ class AuthBackend_ActiveDirectory extends Backend_ActiveDirectory
     		return false;
     	}
 
-		$ldap_user = $this->get_ldap_user($username);
-		if ($ldap_user != null) {
-			return $this->authenticate($username, $password);
-		}
-
 		$ldaprecord_dn = 'cn=' . $username . ',ou=People,' . $this->base_dn;
 		
-		// In Active Directory, the values must be an array
-		$ldaprecord['objectclass'] = array();
-		$ldaprecord['objectclass'][] = "person";
-		$ldaprecord['cn'] = (isset($query['FirstName'])) ? $query['FirstName'] : $username;
-		$ldaprecord['sn'] = (isset($query['LastName'])) ? $query['LastName'] : $username;
-		// put user in objectClass inetOrgPerson so we can set the mail and phone number attributes
-		$ldaprecord['userPassword'] = '{MD5}' . base64_encode(pack('H*',md5($password)));
-		// $ldaprecord['telephoneNumber'] = (isset($query['LastName'])) ? $query['TelephoneNumber'] : '';
+		$attrs = array();
+		$attrs['username'] = $username; 
+		$attrs['password'] = $password; 
+		$attrs['firstname'] = isset($query['FirstName']) ? $query['FirstName'] : $username; 
+		$attrs['surname'] = isset($query['LastName']) ? $query['LastName'] : $username;
+		$attrs['email'] = $query['Email'];
+		$attrs['display_name'] = $attrs['firstname'] . ' ' . $attrs['surname'];
+		$attrs['container'] = array('');	// container 	* 	The folder in AD to add the user to.
 		
-		$ldaprecord['objectclass'][] = 'inetOrgPerson';
-		// jpegPhoto
-		// preferredLanguage
 		
-		$ldaprecord['objectclass'][] = 'posixAccount';
-		$ldaprecord['uid'] = $username;
-		$ldaprecord['homeDirectory'] = '/home/' . $username;
-		$ldaprecord['loginShell'] = (isset($query['LoginShell'])) ? $query['LoginShell'] : '/bin/bash';
-		$ldaprecord['uidNumber'] = $this->get_next_number('uid');
-		$ldaprecord['gidNumber'] = $this->get_next_number('gid');
-
-		return @ldap_add($this->priv_conn, $ldaprecord_dn, $ldaprecord);
+		return $this->ad->user_create($attrs);
     }
 
     function removeAccount($username)
@@ -391,8 +376,7 @@ class AuthBackend_ActiveDirectory extends Backend_ActiveDirectory
     	if ($username == null) {
     		return false;
     	}
-    	$user = $this->get_ldap_user($username);
-		return ldap_delete($this->priv_conn, $user);
+    	return $this->ad->user_delete($username);
     }
 
     function setPassword($username, $password)
@@ -400,47 +384,17 @@ class AuthBackend_ActiveDirectory extends Backend_ActiveDirectory
     	if ($username == null) {
     		return false;
     	}
-    	$user = $this->get_ldap_user($username);
-    	$user_dn = $user['dn'];
-    	$ldaprecord['userPassword'] = '{MD5}' . base64_encode(pack('H*',md5($password)));
-		return ldap_mod_replace($this->priv_conn, $user_dn, $ldaprecord);
+    	return $this->ad->user_password($username, $password);
 	}
 
     function search($str = null)
     {
-    	if ($str != null) {
-    		$filter = str_replace("%USERNAME%", $str, $this->user_filter);
-    	} else {
-    		$filter = str_replace("%USERNAME%", "", $this->user_filter);
-    	}
-
-   		$sr = ldap_search($this->conn, $this->base_dn, $filter, array('dn'));
-   	
-   		if (ldap_count_entries($this->conn, $sr) != 1) {
-   			return null;
-   		}
-   		$users = ldap_get_entries($this->conn, $sr);
-   		$result = array();
-		foreach ($users as $user) { 
-   			$result[] = $user[0];
-		}
-		
-		return $result;
-	}
-
-	function get_ldap_user($username)
-	{
-    	$filter = str_replace("%USERNAME%", $username, $this->user_filter);
-    	
-    	$sr = ldap_search($this->conn, $this->base_dn, $filter);
-    	
-    	if (ldap_count_entries($this->conn, $sr) != 1) {
+    	$result = $this->ad->user_info($str);
+    	if (count($result) < 1) {
     		return null;
     	}
-    	$users = ldap_get_entries($this->conn, $sr);
 
-    	$user = $users[0];
-    	return $user;
+		return $result;
 	}
 
 	/**
@@ -458,70 +412,7 @@ class AuthBackend_ActiveDirectory extends Backend_ActiveDirectory
     	}
 		$result = $this->ad->authenticate($username, $password);
 		return $result;
-    }
-    
-    /**
-	 * Get the next available uidNumber. It searches all entries that have
-	 * uidNumber set, finds the smallest and "fills in the gaps" by
-	 * incrementing the smallest uidNumber until an unused value is found.
-	 * 
-	 * Please, note that both algorithms are susceptible to a race condition.
-	 * If two admins are adding users simultaneously, the users may get
-	 * identical uidNumbers with this function.
-	 * 
-	 * This code was based upon work of the The phpLDAPadmin development team
-	 * (lib/functions.php).
-	 */
-	function get_next_number($type='uid')
-	{
-		if ($type != 'uid' && $type != 'gid') {
-			return NULL;
-		}
-	
-		$filter = '(|(uidNumber=*)(gidNumber=*))';
-		switch ($type) {
-			case 'uid':
-				$number = $this->min_uid_number;
-				break;
-			case 'gid':
-				$number = $this->min_gid_number;
-				break;
-		}
-		
-		$sr = ldap_search($this->conn, $this->base_dn, $filter, array('uidNumber','gidNumber'), 'sub', false, 'search');
-    	$search = ldap_get_entries($this->conn, $sr);
-		if (! is_array($search)) {
-			return null;
-		}
-		
-		foreach ($search as $dn => $attrs) {
-			if (! is_array($attrs)) {
-				continue;
-			}
-
-			$attrs = array_change_key_case($attrs);
-			$entry = array();
-			
-			switch ($type) {
-				case 'uid' :
-					if (isset($attrs['uidnumber'])) {
-						if (intval($attrs['uidnumber'][0]) > $number) {
-							$number = intval($attrs['uidnumber'][0]);
-						}
-					}
-					break;
-				case 'gid' :
-					if (isset($attrs['gidnumber'])) {
-						if (intval($attrs['gidnumber'][0]) > $number) {
-							$number = intval($attrs['gidnumber'][0]);
-						}
-					}
-					break;
-			}
-		}	
-
-		return $number;		
-	}
+    }   
 }
 
 
