@@ -32,6 +32,11 @@ class Controller
 	function Controller()
 	{
 		$this->log = &Logging::instance();
+		
+		// Force SSL.
+		if (! isset($_SERVER['HTTPS']) OR $_SERVER['HTTPS'] != 'on') {
+			$this->redirect('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+		}
 	}
 	
 	function setServer($server)
