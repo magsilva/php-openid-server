@@ -29,14 +29,16 @@ class Controller
 	
 	var $sso;
 	
+	var $log;
+	
 	function Controller()
 	{
 		$this->log = &Logging::instance();
 		
 		// Force SSL.
-		if (! isset($_SERVER['HTTPS']) OR $_SERVER['HTTPS'] != 'on') {
-			$this->redirect('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
-		}
+		// if (! isset($_SERVER['HTTPS']) OR $_SERVER['HTTPS'] != 'on') {
+		// 	$this->redirect('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+		//}
 	}
 	
 	function setServer($server)
@@ -49,7 +51,6 @@ class Controller
 	function setTemplateEngine($template_engine)
 	{
 		$this->template_engine = $template_engine;
-		set_error_handler(array($this, 'handleError'));
 	}
 
 	function getHandler($action)
@@ -135,28 +136,25 @@ class Controller
 			case E_CORE_WARNING:
 			case E_COMPILE_ERROR:
 			case E_COMPILE_WARNING:
-				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				// print_r(debug_backtrace());
+				$this->log->warning('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				$this->template_engine->addError($errstr);
 				exit();
 				break;
 		
 			case E_USER_ERROR:
-				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				// print_r(debug_backtrace());
+				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 			    $this->template_engine->addError($errstr);
 			    exit();
 				break;
 			
 			case E_USER_WARNING:
 			case E_USER_NOTICE:
-				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
-				// print_r(debug_backtrace());
+				$this->log->notice('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				$this->template_engine->addError($errstr);
 				exit();
 			
 			default:
-				echo 'Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr;
+				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				exit();
     	}
 	
@@ -239,6 +237,7 @@ class Controller
 		
 		if ($request === null) {
 			// Error; $method not supported.
+			// trigger_error('Request method ' . $method  . 'not supported.');
 			$this->template_engine->addError('Request method ' . $method  . 'not supported.');
 			$this->template_engine->display();
 		} else {

@@ -5,7 +5,6 @@
  */
 define('CREATE_DATABASE', false);
 
-
 /**
  * The site title; this will appear at the top and bottom of each
  * page, as well as in the browser title bar.

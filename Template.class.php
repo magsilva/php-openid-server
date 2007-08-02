@@ -21,7 +21,6 @@ require_once('config.php');
 require_once('common.php');
 require_once('smarty/Smarty.class.php');
 
-
 /**
  * The Smarty template class used by this application.
  */
@@ -31,22 +30,32 @@ class Template extends Smarty
 	
 	var $language;
 	
+	var $log;
+	
+	var $errors;
+	
+	var $messages;
+	
     function Template($language = SITE_LANGUAGE)
     {
+    	$this->log = &Logging::instance();
+    	
     	$this->available_languages = array(
 			'default' => 'default language',
 			'en' => 'english',
 			'de' => 'deutsch'
 		);
-    
-    	if (key_exists($language, $this->available_languages)) {
+       	if (key_exists($language, $this->available_languages)) {
 			$this->language = $language;
 		} else {
 			$this->language = SITE_LANGUAGE;
 		}
+		$this->log->info("Language in use: $this->language");
 		    
         $this->template_dir = PHP_SERVER_PATH . 'templates/' . $this->language;
         $this->compile_dir = PHP_SERVER_PATH . 'templates/' . $this->language . '/templates_c';
+        $this->log->info("Using templates from '$this->template_dir' and compiling them to '$this->compile_dir'");
+        
         $this->errors = array();
         $this->messages = array();
     }
@@ -74,7 +83,7 @@ class Template extends Smarty
 
         if ($template_override && $filename) {
             return parent::display($filename);
-        } else if (!$template_override) {
+        } else if (! $template_override) {
             if ($filename) {
                 $this->assign('body', $this->fetch($filename));
             }

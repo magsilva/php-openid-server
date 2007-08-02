@@ -49,14 +49,14 @@ if (isset($_GET['lang'])) {
 		$language = $_GET['lang'];
 	}
 }
-$template = new Template();
-$controller->setTemplateEngine($template);
+$template = new Template($language);
 $log->info('Template engine initialized');
+$controller->setTemplateEngine($template);
 
 set_error_handler(array($controller, 'handleError'));
 $log->info('Handed over the error handling to the application controller');
 
-$log->info('Handing over the request processment to the controller.');
+$log->info('System ready! Handing over the request processment to the controller.');
 $controller->processRequest();
 
 ?>

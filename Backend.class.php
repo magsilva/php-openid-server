@@ -22,11 +22,9 @@ Copyright (C) 2005 JanRain, Inc.
  * Storage backend implementations.
  */
  
-// File required from PEAR DB.
 require_once('DB.php');
 require_once('xmpp/xep-0070.php');
-
-require_once('adLDAP.php');
+require_once('adldap/adLDAP.php');
 
 /**
  * Data storage area. We don't worry, for now, about data creation and 

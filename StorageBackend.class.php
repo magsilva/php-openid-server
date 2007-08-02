@@ -66,7 +66,7 @@ class Storage_MYSQL extends Backend_MYSQL
 						'account VARCHAR(255) NOT NULL, '.
                         'trust_root VARCHAR(512) NOT NULL, ' .
                         'sso_url VARCHAR(512), ' .
-                        'trust_level INTEGER, ' .
+                        'trusted BOOLEAN, ' .
                         'PRIMARY KEY (account, trust_root)' .
                         ')';
                         
@@ -78,47 +78,29 @@ class Storage_MYSQL extends Backend_MYSQL
 
         // Create tables for OpenID storage backend.
         $tables = array(
-                      $identities,
-                      $personas,
-                      $sites,
-                      $domains);
+                      'identities' => $identities,
+                      'personas' => $personas,
+                      'sites' => $sites,
+                      'domains' => $domains);
 
-		$this->log->debug('Creating tables ' . implode(', ', $tables));
-        foreach ($tables as $t) {
-            $result = $this->db->query($t);
-            $this->log->debug("Created table $t");
+		$this->log->debug('Creating tables \'' . implode('\', \'', array_keys($tables)) . '\'');
+        foreach ($tables as $key => $value) {
+            $result = $this->db->query($value);
+            $this->log->info("Created table '$key'");
         }
     }
 
 	function __trustLog($account, $trust_root, $trusted)
 	{
-		$trust_level = 0;
-		$current_level = $this->db->getOne(
-			'SELECT trust_level FROM sites WHERE account = ? AND trust_root = ?',
-    		array($account, $trust_root));
-    	
-    	if (! empty($current_level)) {
-    		$trust_level = $current_level;
-    	}
-    	
-    	if ($trusted) {
-    		$trust_level++;
-    	} else {
-    		$trust_level--;
-    	}
-    	if ($trust_level < 0) {
-    		$trust_level = 0;
-    	}
-
        	$this->db->query(
-				'INSERT INTO sites (account, trust_root, trust_level) VALUES (?, ?, ?)',
-            	array($account, $trust_root, $trust_level));
+				'INSERT INTO sites (account, trust_root, trusted) VALUES (?, ?, ?)',
+            	array($account, $trust_root, $trusted));
 	
 		$this->db->query(
-				'UPDATE sites SET trust_level = ? WHERE account = ? AND trust_root = ?',
-        		array($trusted, $trust_root, $trust_level));
+				'UPDATE sites SET trusted = ? WHERE account = ? AND trust_root = ?',
+        		array($trusted, $account, $trust_root));
         		
-		$this->log->info("Changed the trust level of $trust_root, for user $account, to $trust_level");
+		$this->log->info("Changed the trust of '$trust_root', for user '$account', to '$trusted'");
 	}
 
     function getRelatedDomains($trust_root)
