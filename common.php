@@ -17,6 +17,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
+function get_http_request_headers()
+{
+	$headers = array();
+	if (function_exists('getallheaders') && getallheaders() !== FALSE) {
+		$tmp = getallheaders();
+		foreach ($tmp as $key => $value) {
+			$headers[strtolower($key)] = $value;
+		}
+	} else {
+		foreach($_SERVER as $name => $value) {
+			if (substr($name, 0, 5) == 'HTTP_') {
+				$headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+			}
+		}
+	}
+	return $headers;
+}
+
 function getLanguage($code)
 {
     global $language_codes;

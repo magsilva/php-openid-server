@@ -18,27 +18,10 @@ Copyright (C) 2005 JanRain, Inc.
 */
 
 require_once('Action.class.php');
+require_once('common.php');
 
 class IdentityPage extends Action
-{
-	function getHttpRequestHeaders()
-	{
-		$headers = array();
-		if (function_exists('getallheaders') && getallheaders() !== FALSE) {
-			$tmp = getallheaders();
-			foreach ($tmp as $key => $value) {
-				$headers[strtolower($key)] = $value;
-			}
-		} else {
-			foreach($_SERVER as $name => $value) {
-				if (substr($name, 0, 5) == 'HTTP_') {
-					$headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
-				}
-			}
-		}
-		return $headers;
-	}
-	
+{	
 	function process($method, &$request)
 	{
 	    $serve_xrds_now = false;
@@ -47,7 +30,7 @@ class IdentityPage extends Action
 	    // otherwise, display the identity page with an XRDS location
 	    // header.
 	    // TODO: Replace with a generic function (like the one from CoTeia)
-	    $headers = $this->getHttpRequestHeaders();
+	    $headers = get_http_request_headers();
 	    foreach ($headers as $header => $value) {
 	        if ($header == 'Accept' && preg_match('/application\/xrds\+xml/', $value)) {
 	            $serve_xrds_now = true;
@@ -62,7 +45,6 @@ class IdentityPage extends Action
 	        header('X-XRDS-Location: ' . $this->controller->getServerURL() . '?xrds=' . $request['user']);
 	        $this->template->assign('openid_url', $this->server->getAccountIdentifier($request['user']));
 	        $this->template->assign('user', $request['user']);
-	        
 	        $this->template->display('idpage.tpl', true);
 	    }
 	}
