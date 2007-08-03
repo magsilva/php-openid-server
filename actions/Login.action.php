@@ -23,47 +23,50 @@ class Login extends Action
 {
 	function process($method, &$request)
 	{
-	    if ($this->server->getAccount()) {
-	        $this->controller->forward($method, $request, 'index');
-	    }
-	
+		if ($this->server->getAccount() != null) {
+			$this->log->err('Trying to login when already is authenticated.');
+		}
+		
+		// Do the authentication.
 	    if ($method == 'POST') {
 	        // Process login.
 	        $u = $request['username'];
 	        $p = $request['passwd'];
-	
+	        
 	        if ($u && $p) {
-	        	if ($u == ADMIN_USERNAME && md5($p) == ADMIN_PASSWORD_MD5) {
-	                // Log in as admin.
-	                $this->server->setAccount($u, true);
-	                $this->controller->forward($method, $request, 'index');
-	            } else if (($u != ADMIN_USERNAME) &&  $this->auth->authenticate($u, $p)) {
-	           
-	                $this->server->setAccount($u);
-	
-					$return_to = null;
-					if (array_key_exists('return_to', $request)) {
-				        $return_to = html_entity_decode($request['return_to']);
-				    }
-					if (array_key_exists('openid_return_to', $request)) {
-				        $return_to = html_entity_decode($request['openid_return_to']);
-				    }
-	                
-                	$action = 'index';
-                	if (array_key_exists('next_action', $request)) {
-                    	$request['action'] = $request['next_action'];
-                    	$action = $request['action'];
-                    	unset($request['next_action']);
+	        	// Special case: admin authentication
+	        	if ($u == ADMIN_USERNAME) {
+	    			if (md5($p) == ADMIN_PASSWORD_MD5) {
+		                // Log in as admin.
+		                $this->server->setAccount($u, true);
+					    $this->template->display('main.tpl');
+	    			} else {
+	    				trigger_error('Incorrect authentication information.');
+	    			}
+	            }
+	            
+	            if ($this->auth->authenticate($u, $p)) {
+	            	$this->server->setAccount($u);
+		            $this->log->info("User $u has been authenticated");
+	            	    
+	                // Default action is 'index'.
+                	if (array_key_exists('action', $request) && $request['action'] == 'login') {
+                    	$this->controller->forward($method, $request, 'index');
                 	}
-                    $this->controller->forward($method, $request, $action);
+                	return true;
+                    
 	            } else {
-	                $this->template->addError('The confirmation request was rejected, or timed out.');
+	                trigger_error('The confirmation request was rejected, or timed out.');
 	            }
 			} else {
-				$this->template->addError('Please fill in all the available fields.');
+				trigger_error('Please fill in all the available fields.');
 			}
 	    }
-	
+
+		// Gather the data required to the authentication process.	
+	    if (array_key_exists('action', $request)) {
+	        $this->template->assign('action', $request['action']);
+	    }
 	    if (array_key_exists('next_action', $request)) {
 	        $this->template->assign('next_action', $request['next_action']);
 	    }
@@ -80,7 +83,7 @@ class Login extends Action
 	        // Reverse lookup from URL to account name.
 	        $username = $this->storage->getAccountForUrl($info->identity);
 	
-	        if ($username !== null) {
+	        if ($username != null) {
 	            $this->template->assign('required_user', $username);
 	            $this->template->assign('identity_url', $info->identity);
 	        } else {
@@ -88,7 +91,7 @@ class Login extends Action
 	            // know about that URL.
 	            $this->server->clearAccount();
 	            $this->controller->setRequestInfo();
-	            $this->template->addError('You\'ve tried to authenticate using a URL this '.
+	            trigger_error('You\'ve tried to authenticate using a URL this '.
 	                                'server does not manage (<code>' . $info->identity . '</code>). ' .
 	                                'If you are using your own identity page, there may be a typo ' .
 	                                'in the URL.');
@@ -96,7 +99,7 @@ class Login extends Action
 	    }
 	
 	    $this->template->display('login.tpl');
-	    return true;
+	    exit();
 	}
 }
 

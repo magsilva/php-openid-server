@@ -42,7 +42,7 @@ class IdentityPage extends Action
 	        $request['xrds'] = $request['user'];
 	        $this->controller->forward($method, $request, 'XRDS');
 	    } else {
-	        header('X-XRDS-Location: ' . $this->controller->getServerURL() . '?xrds=' . $request['user']);
+	        header('X-XRDS-Location: ' . $this->controller->getServerURL() . '?action=XRDS&user=' . $request['user']);
 	        $this->template->assign('openid_url', $this->server->getAccountIdentifier($request['user']));
 	        $this->template->assign('user', $request['user']);
 	        $this->template->display('idpage.tpl', true);

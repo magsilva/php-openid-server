@@ -94,6 +94,11 @@ define('COOKIE_NAME', 'secret');
 define('COOKIE_TIMEOUT', time() + (60 * 60 * 24 * 7));		
 
 /**
+ * Force use of secure HTTP connections.
+ */
+define('FORCE_HTTPS', false);
+
+/**
  * Filename to output the logging information.
  */
 define('LOG_FILENAME', dirname(__FILE__) . '/out.log');

@@ -48,6 +48,11 @@ class Action
 	}
 	
 	function process($method, &$request) {}
+	
+	function requireAuth()
+	{
+		return false;
+	}
 }
 
 ?>

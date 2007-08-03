@@ -24,7 +24,9 @@ class Logout extends Action
 	function process($method, &$request)
 	{
 	    $this->server->clearAccount();
-	    $this->controller->redirect();
+	    $this->controller->forward($method, $request, 'index');
+	    
+	    return true;
 	}
 }
 

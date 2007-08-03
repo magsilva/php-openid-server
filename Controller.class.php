@@ -36,9 +36,13 @@ class Controller
 		$this->log = &Logging::instance();
 		
 		// Force SSL.
-		// if (! isset($_SERVER['HTTPS']) OR $_SERVER['HTTPS'] != 'on') {
-		// 	$this->redirect('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
-		//}
+		if (! isset($_SERVER['HTTPS']) OR $_SERVER['HTTPS'] != 'on') {
+			$this->log->debug('Using unsecure HTTP connection');
+			if (FORCE_HTTPS) {
+				$this->log->debug('Switching to secure HTTP connection');
+				// $this->redirect('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+			}
+		}
 	}
 	
 	function setServer($server)
@@ -56,24 +60,24 @@ class Controller
 	function getHandler($action)
 	{
 		$handler = null;
-
+		
 		if ($action == null || empty($action)) {
-		} else {
-			$action = ucfirst($action);
-			$filename = 'actions/' . $action . '.action.php';
-			$filename = realpath($filename);
-			if ($filename === FALSE) {
-				trigger_error('Action "' . $action . '" not supported.');
-			} else {
-				$filename = basename($filename);
-				$filename =  'actions/' . $filename;
-	
-				$handler = array();
-				$handler[] = $filename;
-				$handler[] = $action;
-		    }
+			trigger_error('No action was given', E_USER_ERROR);
 		}
-	
+		
+		$action = ucfirst($action);
+		$filename = dirname(__FILE__) . '/actions/' . $action . '.action.php';
+		$filename = realpath($filename);
+		if ($filename === FALSE) {
+			trigger_error("Action '$action' not supported.", E_USER_ERROR);
+		}
+		
+		$this->log->debug("Found a handler for action '$action' ('$filename')");
+		$filename = basename($filename);
+		$filename =  'actions/' . $filename;
+		require_once($filename);
+		$handler = new $action($this);
+
 	    return $handler;
 	}
 
@@ -84,10 +88,10 @@ class Controller
 
     	switch ($method) {
     		case 'GET':
-        		return array($method, $_GET);
+        		return array($method, $_REQUEST);
         		break;
     		case 'POST':
-        		return array($method, $_POST);
+        		return array($method, $_REQUEST);
         		break;
     	}
 
@@ -126,8 +130,10 @@ class Controller
                 E_STRICT          => 'Runtime Notice'
         );
 		switch ($errno) {
-			case E_NOTICE:
 			case E_STRICT:
+				break;
+			case E_NOTICE:
+				$this->log->warning('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				break;
 			case E_ERROR:
 			case E_WARNING:
@@ -136,22 +142,20 @@ class Controller
 			case E_CORE_WARNING:
 			case E_COMPILE_ERROR:
 			case E_COMPILE_WARNING:
-				$this->log->warning('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
-				$this->template_engine->addError($errstr);
+				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				exit();
 				break;
 		
 			case E_USER_ERROR:
 				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 			    $this->template_engine->addError($errstr);
-			    exit();
-				break;
+				break;	
 			
 			case E_USER_WARNING:
 			case E_USER_NOTICE:
 				$this->log->notice('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				$this->template_engine->addError($errstr);
-				exit();
+				break;
 			
 			default:
 				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
@@ -214,6 +218,8 @@ class Controller
 
 	function processRequest()
 	{
+		$this->log->debug('Request being processed: ' . $_SERVER['REQUEST_URI']);
+		
 		$this->template_engine->assign('account', $this->server->getAccount());
         $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
 		$this->template_engine->assign('RAW_SERVER_URL', $this->getServerURL());
@@ -221,35 +227,21 @@ class Controller
 
 		// First, get the request data.
 		list($method, $request) = $this->getRequest();
-
-		if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] == '/serve') {
-			$this->forward($method, $request, 'serve');
-		// If it's a request for an identity URL, render that.
-		} else if (array_key_exists('user', $request) && $request['user']) {
-			$this->forward($method, $request, 'identityPage');
-		// If it's a request for a user's XRDS, render that.
-		} else if (array_key_exists('xrds', $request) && $request['xrds']) {
-			$this->forward($method, $request, 'XRDS');
-		}
 		
 		$this->showMessages();
 		
-		
 		if ($request === null) {
 			// Error; $method not supported.
-			// trigger_error('Request method ' . $method  . 'not supported.');
-			$this->template_engine->addError('Request method ' . $method  . 'not supported.');
-			$this->template_engine->display();
-		} else {
-			// Dispatch request to appropriate handler.
-			$action = 'index';
-			if (array_key_exists('action', $request)) {
-				$action = $request['action'];
-				$action = ucfirst($action);
-			}
-			
-			$this->forward($method, $request, $action);
-		}		
+			trigger_error('Request method ' . $method  . 'not supported.', E_USER_ERROR);
+		}
+		
+		// Dispatch request to appropriate handler.
+		$action = 'index';
+		if (array_key_exists('action', $request)) {
+			$action = $request['action'];
+		}
+		$this->forward($method, $request, $action);
+		exit();
 	}
 
 	
@@ -323,31 +315,20 @@ class Controller
 	
 	function forward($method, $request, $action)
 	{
-		if (empty($action)) {
-			trigger_error('No action has been given.');
-		} else {
-			$this->log->info("Forwarding to action '$action'");
-			// Dispatch request to appropriate handler.
-			$handler = $this->getHandler($action);
-			if ($handler !== null) {
-				$this->log->info("Found a handler for action '$action'");
-				list($filename, $clsname) = $handler;
-				require_once($filename);
-				$action = new $clsname($this);
-				$this->log->info("Handing over the job to the handler '$clsname'");
-				$result = $action->process($method, $request);
-				if ($result === false) {
-					$this->template_engine->display('main.tpl');
-				}
-				exit();
-			} else {
-				trigger_error("No suitable handler found for action '$action'.");
-			}
+		$this->log->debug("Forwarding to action '$action' ($method, \n" . var_export($request, true) . ")");
+		// Dispatch request to appropriate handler.
+		$handler = $this->getHandler($action);
+		if ($handler->requireAuth() && $this->server->getAccount() == null) {
+			$this->log->debug('Action requires authentication and user is not authenticated, so forwarding him to login');
+			$result = $this->forward($method, $request, 'login');
 		}
-		$this->template_engine->display('main.tpl');
-		exit();
-	}
 
+		$this->log->debug("Handing over the job to $action action's handler");
+		$result = $handler->process($method, $request);
+		if ($result === false) {
+			$this->template_engine->display('main.tpl');
+		}
+	}
 
 
 	function getRequestInfo()

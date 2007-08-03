@@ -21,6 +21,15 @@ require_once('Action.class.php');
 
 class Serve extends Action
 {
+	function requireAuth()
+	{
+/*	    $request = $this->openid_server->decodeRequest();
+		if ($request->immediate) {
+			return false;
+		} */
+		return true;
+	}
+	
 	function process($method, &$request)
 	{
 	    $http_request = $request;
@@ -50,28 +59,29 @@ class Serve extends Action
 	        $openid_identity = $request->identity;
 	        $expected_account = $this->storage->getAccountForUrl($request->identity);
 
-	        if ($request->immediate && $account == null) {
-				$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated (and, as an immediate authentication was requested, it completely failed)");
-	            $response =& $request->answer(false, $this->controller->getServerURL());
-	        } else if ($account != null &&
-	                   $this->storage->isTrusted($account, $request->trust_root) &&
-	                   in_array($request->identity, $urls)) {
-				$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
-				$response =& $request->answer(true);
-				$this->server->addSregData($account, $response, $this->controller->getRequestInfo());
-	        } else if ($account != $this->storage->getAccountForUrl($request->identity)) {
-	        	$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated");
-	            $this->server->clearAccount();
-	            $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
-	            $http_request['next_action'] = 'trust';
-		    	$this->controller->forward($method, $http_request, 'login');
-	        } else {
-	            if ($this->storage->isTrusted($account, $request->trust_root)) {
+			// User is not authenticated
+			if ($account == null && $request->immediate) {
+				$this->log->info("Immediate authentication for user '$expected_account' ($openid_identity) was denied.");
+				$response =& $request->answer(false, $this->controller->getServerURL());
+			}
+
+			// User is authenticated but OpenID doesn't accept it (I don't know how, but...)
+	     	if ($account != null && $account != $this->storage->getAccountForUrl($request->identity)) {
+	     		$this->log->info("User '$account' ($openid_identity) is authenticated, but not with the expected account ($expected_account)");
+	     		$this->server->clearAccount();
+	     		$this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
+	     		$this->controller->forward($method, $request, 'serve');
+	     		return true;
+	     	}
+
+			// User is authenticated.	        
+	     	if ($account != null) {
+	     		if ($this->storage->isTrusted($account, $request->trust_root)) {
 					$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
 	                $response =& $request->answer(true);
 	                $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	            } else {
-	            	$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' isn't trusted");
+	            	$this->log->info("User '$account' ($openid_identity) is authenticated but server '$request->trust_root' isn't trusted");
 	                $this->controller->forward($method, $request, 'trust');
 	            }
 	        }

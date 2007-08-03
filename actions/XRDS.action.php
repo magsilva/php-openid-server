@@ -23,7 +23,7 @@ class XRDS extends Action
 {
 	function process($method, &$request)
 	{
-	    $username = $request['xrds'];
+	    $username = $request['user'];
 	    $this->template->assign('account', $username);
 	    $this->template->assign('openid_url', $this->server->getAccountIdentifier($username));
 	

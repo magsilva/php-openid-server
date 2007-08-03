@@ -34,15 +34,17 @@ require_once('Controller.class.php');
 
 $log = &Logging::instance();
 
+$log->debug('Initializing application');
 $controller = new Controller();
-$log->info('Controller initialized');
 
-// Initialize backends.
+// Initialize OpenID backend.
 $server = new OpenIDServer($controller->getServerURL(), AUTH_BACKEND, $auth_parameters, STORAGE_BACKEND, $storage_parameters);
 $controller->setServer($server);
-$log->info('OpenID server initialized');
 
-// Create a page template.
+// Hack to circunvent a PHP strict notice.
+date_default_timezone_set(date_default_timezone_get());
+
+// Create a template engine.
 $language = SITE_LANGUAGE;
 if (isset($_GET['lang'])) {
 	if (key_exists($_GET['lang'], $valid_lang) ) {
@@ -50,13 +52,12 @@ if (isset($_GET['lang'])) {
 	}
 }
 $template = new Template($language);
-$log->info('Template engine initialized');
 $controller->setTemplateEngine($template);
 
+$log->debug('Taking over the PHP error handler');
 set_error_handler(array($controller, 'handleError'));
-$log->info('Handed over the error handling to the application controller');
 
-$log->info('System ready! Handing over the request processment to the controller.');
+$log->debug('System ready! Handing over the request process to the controller.');
 $controller->processRequest();
 
 ?>

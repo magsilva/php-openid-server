@@ -27,6 +27,10 @@ class Redirect extends Action
 		$response = $_SESSION['response'];
 	    $this->controller->setRequestInfo();
 	    $this->controller->handleResponse($response);
+	    
+		// The Controller->handleResponse shouldn't return. If it has,
+		// something wrong has gone wrong.
+	    return false;   
 	}
 }
 

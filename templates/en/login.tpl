@@ -2,13 +2,8 @@
 
 <form name="loginform" method="post" action="{$SERVER_URL}">
 
-<input type="hidden" name="action" value="login" />
-{if $next_action}
-<input type="hidden" name="next_action" value="{$next_action}" />
-{/if}
-{if $return_to}
-<input type="hidden" name="return_to" value="{$return_to}" />
-{/if}
+{paste_request_parameters_as_form}
+{$imported_parameters}
 
 <table class="login">
 <tr>

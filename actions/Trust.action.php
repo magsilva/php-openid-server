@@ -21,17 +21,19 @@ require_once('Action.class.php');
 
 class Trust extends Action
 {
+	function requireAuth()
+	{
+		return true;
+	}
+	
 	function process($method, &$request)
 	{
-	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin($request);
-	    }
-	    
-	    $account = $this->server->getAccount();
+		$account = $this->server->getAccount();
 	    list($request_info, $sreg) = $this->controller->getRequestInfo();
 	
 	    if ($request_info === FALSE) {
-	        $this->controller->redirect();
+	    	trigger_error('Invalid request.');
+	    	return false;
 	    }
 	
 	    $urls = $this->storage->getUrlsForAccount($account);
@@ -81,12 +83,16 @@ class Trust extends Action
 	            	            
 			    $this->template->display('redirect.tpl');
 	            $_SESSION['response'] = $response;
-	            return;
+	            return true;
 	            
 	        } else {
 	            $response = $request_info->answer(false);
 	            $this->controller->setRequestInfo();
 	        	$this->controller->handleResponse($response);
+	        	
+	        	// The Controller->handleResponse shouldn't return. If it has,
+	        	// something wrong has gone wrong.
+	        	return false;
 	        }
 	    }
 	

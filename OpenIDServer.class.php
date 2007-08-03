@@ -55,12 +55,12 @@ class OpenIDServer
 	{
         $cls = 'AuthBackend_' . $auth_backend;
         if (! class_exists($cls)) {
-        	trigger_error('Could not start authencitation class');
+        	trigger_error('Could not start authencitation class', E_USER_ERROR);
         }
         
         $auth_backend = new $cls();
         if (! $auth_backend->connect($auth_parameters)) {
-            trigger_error('Could not start authentication engine');
+            trigger_error('Could not start authentication engine', E_USER_ERROR);
         }
         $this->auth_backend =& $auth_backend;
 	}
@@ -69,12 +69,12 @@ class OpenIDServer
 	{
         $cls = 'Storage_' . $storage_backend;
         if (! class_exists($cls)) {
-        	trigger_error('Could not start storage class');
+        	trigger_error('Could not start storage class', E_USER_ERROR);
         }
         
         $storage_backend = new $cls();
         if (! $storage_backend->connect($storage_parameters)) {
-            trigger_error('Cannot start storage engine');
+            trigger_error('Cannot start storage engine', E_USER_ERROR);
 	    }
 	    $this->storage_backend =& $storage_backend;
 	}
@@ -134,7 +134,8 @@ class OpenIDServer
 	
 	function getAccountIdentifier($account)
 	{
-		$identifier = sprintf('%s?user=%s', $this->domain, $account);
+
+		$identifier = sprintf('%s?action=identityPage&user=%s', $this->domain, $account);
 		return $identifier;
 	}
 	

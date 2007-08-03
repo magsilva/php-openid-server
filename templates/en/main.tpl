@@ -51,7 +51,7 @@ For you, user, it works this way:
 content:</p>
 
 <pre>
-&lt;link rel="openid.server" href="<a href="{$RAW_SERVER_URL}index.php/serve">"{$RAW_SERVER_URL}index.php/serve</a>"&gt;
+&lt;link rel="openid.server" href="<a href="{$RAW_SERVER_URL}?action=serve">"{$RAW_SERVER_URL}?action=serve</a>"&gt;
 &lt;link rel="openid.delegate" href="<a href="{$account_openid_url}">{$account_openid_url}</a>"&gt;
 </pre>
 

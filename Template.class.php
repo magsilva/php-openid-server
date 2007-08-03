@@ -50,11 +50,11 @@ class Template extends Smarty
 		} else {
 			$this->language = SITE_LANGUAGE;
 		}
-		$this->log->info("Language in use: $this->language");
+		$this->log->debug("Language in use: $this->language");
 		    
         $this->template_dir = PHP_SERVER_PATH . 'templates/' . $this->language;
         $this->compile_dir = PHP_SERVER_PATH . 'templates/' . $this->language . '/templates_c';
-        $this->log->info("Using templates from '$this->template_dir' and compiling them to '$this->compile_dir'");
+        $this->log->debug("Using templates from '$this->template_dir' and compiling them to '$this->compile_dir'");
         
         $this->errors = array();
         $this->messages = array();
@@ -72,6 +72,16 @@ class Template extends Smarty
 
     function display($filename = null, $template_override = false)
     {
+    	if ($template_override) {
+	    	$this->log->debug("Displaying template '$filename'");
+    	} else {
+    		$this->log->debug("Displaying template '$filename' using 'index.tpl' as container");
+    	}
+    	
+    	if ($template_override && $filename == null) {
+    		trigger_error('Cannot override the default template if none is given instead', E_USER_ERROR);
+    	}
+    	
         $this->assign('errors', $this->errors);
         $this->assign('messages', $this->messages);
         $this->assign('SITE_TITLE', SITE_TITLE);
@@ -81,14 +91,14 @@ class Template extends Smarty
         $this->assign('current_language', 'lang=' . $this->language);
         $this->assign('available_languages', $this->available_languages);
 
-        if ($template_override && $filename) {
+        if ($template_override) {
             return parent::display($filename);
-        } else if (! $template_override) {
-            if ($filename) {
-                $this->assign('body', $this->fetch($filename));
-            }
-            return parent::display('index.tpl');
         }
+        
+        if ($filename) {
+			$this->assign('body', $this->fetch($filename));
+		}
+		return parent::display('index.tpl');
     }
 }
 

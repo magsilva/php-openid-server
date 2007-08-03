@@ -2,7 +2,7 @@
 
 <head>
 	<title>{$user}</title>
-	<link rel="openid.server" href="{$RAW_SERVER_URL}index.php/serve" />
+	<link rel="openid.server" href="{$RAW_SERVER_URL}?action=serve" />
 	<link rel="openid.delegate" href="{$openid_url}" />
 	<link rel="stylesheet" href="{$SERVER_URL}media/stylesheet.css">
 </head>
