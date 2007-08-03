@@ -242,7 +242,7 @@ class Controller
 			$this->template_engine->display();
 		} else {
 			// Dispatch request to appropriate handler.
-			$action = null;
+			$action = 'index';
 			if (array_key_exists('action', $request)) {
 				$action = $request['action'];
 				$action = ucfirst($action);
@@ -311,32 +311,37 @@ class Controller
 				$return_to = $request['return_to'];
 			}
 		}
-		$this->log->info("Redirecting with login to '$action'");
+		$this->log->debug("Redirecting with login to '$action'");
 		$this->redirect(null, 'login', $action, $return_to);		
 	}
 	
 	function redirectWithAdmin($action)
 	{
-		$this->log->info("Redirecting requiring admin privileges to '$action'");
+		$this->log->debug("Redirecting requiring admin privileges to '$action'");
 		$this->redirect();
 	}
 	
 	function forward($method, $request, $action)
 	{
-		$this->log->info("Forwarding to action '$action'");
-		// Dispatch request to appropriate handler.
-		$handler = $this->getHandler($action);
-		if ($handler !== null) {
-			$this->log->info("Found a handler for action '$action'");
-			list($filename, $clsname) = $handler;
-			require_once($filename);
-			$action = new $clsname($this);
-			$this->log->info("Handing over the job to the handler '$clsname'");
-			$action->process($method, $request);
+		if (empty($action)) {
+			trigger_error('No action has been given.');
 		} else {
-			$this->log->info("No suitable handler found for action '$action', redirecting to the main page.");
-			$this->template_engine->display('main.tpl');
+			$this->log->info("Forwarding to action '$action'");
+			// Dispatch request to appropriate handler.
+			$handler = $this->getHandler($action);
+			if ($handler !== null) {
+				$this->log->info("Found a handler for action '$action'");
+				list($filename, $clsname) = $handler;
+				require_once($filename);
+				$action = new $clsname($this);
+				$this->log->info("Handing over the job to the handler '$clsname'");
+				$action->process($method, $request);
+				exit();
+			} else {
+				trigger_error("No suitable handler found for action '$action'.");
+			}
 		}
+		$this->template_engine->display('main.tpl');
 		exit();
 	}
 

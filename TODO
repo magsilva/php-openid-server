@@ -1,7 +1,8 @@
-- Permitir usuário padrão (fazer isso na API dos clientes).
-- Revisar o código. A parte de 'trust' não está funcionando corretamente.
+- Arrumar o Login para o caso de login a partir de uma ferramenta (revisar o
+código novo, com forward ao invés de redirect).
+- O 'trust' está sendo executado sempre (mesmo quando o site é confiável). E a
+tabela de sites está com dados errados. Melhor revisar essa parte do código.
 - Adicionar função de logout (que apague os cookies de todas as aplicações do
 domínio).
 - Usar criptografia no cookie.
 - Create user information on the fly if the LDAP authentication succeeds.
-- Create test cases.

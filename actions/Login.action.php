@@ -24,7 +24,7 @@ class Login extends Action
 	function process($method, &$request)
 	{
 	    if ($this->server->getAccount()) {
-	        $this->controller->redirect();
+	        $this->controller->forward($method, $request, 'index');
 	    }
 	
 	    if ($method == 'POST') {
@@ -36,8 +36,9 @@ class Login extends Action
 	        	if ($u == ADMIN_USERNAME && md5($p) == ADMIN_PASSWORD_MD5) {
 	                // Log in as admin.
 	                $this->server->setAccount($u, true);
-	                $this->controller->redirect();
+	                $this->controller->forward($method, $request, 'index');
 	            } else if (($u != ADMIN_USERNAME) &&  $this->auth->authenticate($u, $p)) {
+	           
 	                $this->server->setAccount($u);
 	
 					$return_to = null;
@@ -47,14 +48,14 @@ class Login extends Action
 					if (array_key_exists('openid_return_to', $request)) {
 				        $return_to = html_entity_decode($request['openid_return_to']);
 				    }
-	                	
-	                if (array_key_exists('next_action', $request)) {
-	                    $action = $request['next_action'];
-						$this->controller->redirect(null, $action, null, $return_to);
-	                } else {
-	                	$this->controller->redirect();
-	                }
-					
+	                
+                	$action = 'index';
+                	if (array_key_exists('next_action', $request)) {
+                    	$request['action'] = $request['next_action'];
+                    	$action = $request['action'];
+                    	unset($request['next_action']);
+                	}
+                    $this->controller->forward($method, $request, $action);
 	            } else {
 	                $this->template->addError('The confirmation request was rejected, or timed out.');
 	            }
