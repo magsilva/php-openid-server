@@ -138,7 +138,7 @@ class OpenIDServer
 		return $identifier;
 	}
 	
-	function needAuth(&$request)
+	function needAuth()
 	{
 	    if (! $this->getAccount()) {
 	    	return true;

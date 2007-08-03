@@ -23,7 +23,7 @@ class Trust extends Action
 {
 	function process($method, &$request)
 	{
-	    if ($this->server->needAuth($request)) {
+	    if ($this->server->needAuth()) {
 	    	$this->controller->redirectWithLogin($request);
 	    }
 	    
@@ -40,7 +40,7 @@ class Trust extends Action
 	    if (! in_array($request_info->identity, $urls)){
 	        $this->server->clearAccount();
 	        $this->controller->setRequestInfo($request_info, $sreg);
-		    if ($this->server->needAuth($request)) {
+		    if ($this->server->needAuth()) {
 		    	$this->controller->redirectWithLogin($request);
 		    }
 	    }

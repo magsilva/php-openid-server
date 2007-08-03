@@ -32,7 +32,7 @@ class Serve extends Action
 	    }
 
 	    if (is_a($request, 'Auth_OpenID_ServerError')) {
-	        $this->log->err('Invalid OpenID request');
+	        $this->log->info('Invalid OpenID request');
 	        $this->controller->handleResponse($request);
 	    }
 	
@@ -63,12 +63,8 @@ class Serve extends Action
 	        	$this->log->info("User '$expected_account' ($openid_identity) isn't authenticated");
 	            $this->server->clearAccount();
 	            $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
-	            $http_request['action'] = 'trust';
-			    if ($this->server->needAuth($http_request)) {
-			    	$this->controller->redirectWithLogin($http_request);
-			    } else {
-			    	$this->controller->redirect($http_request);
-			    }
+	            $http_request['next_action'] = 'trust';
+		    	$this->controller->forward($method, $http_request, 'login');
 	        } else {
 	            if ($this->storage->isTrusted($account, $request->trust_root)) {
 					$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' is trusted");
@@ -76,7 +72,7 @@ class Serve extends Action
 	                $this->server->addSregData($account, $response, $this->controller->getRequestInfo());
 	            } else {
 	            	$this->log->info("User '$account' ($openid_identity) is authenticated and server '$request->trust_root' isn't trusted");
-	                $this->controller->redirect('trust');
+	                $this->controller->forward($method, $request, 'trust');
 	            }
 	        }
 	    } else {

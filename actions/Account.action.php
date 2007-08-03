@@ -29,7 +29,7 @@ class Account extends Action
 	        $sreg_fields,
 	        $timezone_strings;
 	
-	    if ($this->server->needAuth($request)) {
+	    if ($this->server->needAuth()) {
 	    	$this->controller->redirectWithLogin($request);
 	    }
 	    

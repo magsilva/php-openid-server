@@ -24,7 +24,7 @@ class Admin extends Action
 	function process($method, &$request)
 	{
 	    
-	    if ($this->server->needAuth($request)) {
+	    if ($this->server->needAuth()) {
 	    	$this->controller->redirectWithLogin($request);
 	    }
 	    if ($this->server->needAdmin()) {
