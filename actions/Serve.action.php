@@ -27,8 +27,8 @@ class Serve extends Action
 	    $request = $this->openid_server->decodeRequest();
 
 	    if (! $request) {
-	        $this->log->err('Invalid OpenID request');
-	        $this->controller->redirect();
+	        trigger_error('Invalid OpenID request');
+	        return false;
 	    }
 
 	    if (is_a($request, 'Auth_OpenID_ServerError')) {
@@ -86,6 +86,8 @@ class Serve extends Action
 	
 	    $this->controller->setRequestInfo();
 		$this->controller->handleResponse($response);
+		
+		return true;
 	}
 }
 

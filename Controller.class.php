@@ -335,7 +335,10 @@ class Controller
 				require_once($filename);
 				$action = new $clsname($this);
 				$this->log->info("Handing over the job to the handler '$clsname'");
-				$action->process($method, $request);
+				$result = $action->process($method, $request);
+				if ($result === false) {
+					$this->template_engine->display('main.tpl');
+				}
 				exit();
 			} else {
 				trigger_error("No suitable handler found for action '$action'.");

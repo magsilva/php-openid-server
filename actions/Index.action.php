@@ -26,6 +26,7 @@ class Index extends Action
 		$this->template->assign('account', $this->server->getAccount());
         $this->template->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
 	    $this->template->display('main.tpl');
+	    return true;
 	}
 }
 

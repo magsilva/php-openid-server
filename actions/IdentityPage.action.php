@@ -47,6 +47,7 @@ class IdentityPage extends Action
 	        $this->template->assign('user', $request['user']);
 	        $this->template->display('idpage.tpl', true);
 	    }
+	    return true;
 	}
 }
 

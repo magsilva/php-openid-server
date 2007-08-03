@@ -29,6 +29,8 @@ class XRDS extends Action
 	
 	    header('Content-type: application/xrds+xml');
 	    $this->template->display('xrds.tpl', true);
+	    
+	    return true;
 	 }
 }
 

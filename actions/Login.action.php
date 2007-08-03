@@ -96,6 +96,7 @@ class Login extends Action
 	    }
 	
 	    $this->template->display('login.tpl');
+	    return true;
 	}
 }
 
