@@ -54,8 +54,8 @@ if (isset($_GET['lang'])) {
 $template = new Template($language);
 $controller->setTemplateEngine($template);
 
-$log->debug('Taking over the PHP error handler');
-set_error_handler(array($controller, 'handleError'));
+// $log->debug('Taking over the PHP error handler');
+// set_error_handler(array($controller, 'handleError'));
 
 $log->debug('System ready! Handing over the request process to the controller.');
 $controller->processRequest();

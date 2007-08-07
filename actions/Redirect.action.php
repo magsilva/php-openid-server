@@ -25,7 +25,7 @@ class Redirect extends Action
 	function process($method, &$request)
 	{
 		$response = $_SESSION['response'];
-	    $this->controller->setRequestInfo();
+	    $this->controller->clearRequestInfo();
 	    $this->controller->handleResponse($response);
 	    
 		// The Controller->handleResponse shouldn't return. If it has,

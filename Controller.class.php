@@ -57,6 +57,36 @@ class Controller
 		$this->template_engine = $template_engine;
 	}
 
+	function saveRequestInfo()
+	{
+		// http://br.php.net/manual/en/language.variables.predefined.php#72571
+		// PHP automatically replace dots ('.') AND spaces (' ') with underscores ('_')
+		// in any incoming POST or GET (or REQUEST) variables ('.' and ' ' are not valid
+		// characters to use in a variable name).
+		
+		// Vars in $_REQUEST are *not* a reference to the respective $_POST and $_GET and
+		// $_COOKIE ones.
+
+		$_SESSION['request'] = $_REQUEST;
+	}
+	
+	function restoreRequestInfo()
+	{
+		if (isset($_SESSION['request'])) {
+			// $_REQUEST = $_SESSION['request'];
+			// Preserve previous request values (if they do not conflict).
+			foreach ($_SESSION['request'] as $key => $val) {
+				$_REQUEST['$key'] = $val;
+			}
+			$this->clearRequestInfo();
+		}
+	}
+
+	function clearRequestInfo()
+	{
+		unset($_SESSION['request']);
+	}
+
 	function getHandler($action)
 	{
 		$handler = null;
@@ -165,6 +195,7 @@ class Controller
     	/* Don't execute PHP internal error handler */
     	return true;
 	}
+	
 
 	/**
 	 * Get the URL of the current script
@@ -225,6 +256,9 @@ class Controller
 		$this->template_engine->assign('RAW_SERVER_URL', $this->getServerURL());
 		$this->template_engine->assign('SERVER_URL', $this->getServerURLWithLanguage());
 
+		// Restore previous request content (if any)
+		$this->restoreRequestInfo();
+	
 		// First, get the request data.
 		list($method, $request) = $this->getRequest();
 		
@@ -247,6 +281,8 @@ class Controller
 	
 	function redirect($url = null, $action = null, $next_action = null, $return_to = null)
 	{
+		$this->saveRequestInfo();
+
 		// If we didn't assigned an URL, the $url actually has the action.		
 		if ($url != null && (strpos($url, 'http') === FALSE || strpos($url, 'http') != 0)) {
 			// And, if our $url is the action, then $action is the $next_action.
@@ -293,18 +329,8 @@ class Controller
 	
 	function redirectWithLogin($request)
 	{
-		if (is_array($request)) {
-			$action = $request['action'];
-			$return_to = $request['return_to'];
-			if (array_key_exists('openid_return_to', $request)) {
-				$return_to = $request['openid_return_to'];
-			}
-			if (array_key_exists('return_to', $request)) {
-				$return_to = $request['return_to'];
-			}
-		}
 		$this->log->debug("Redirecting with login to '$action'");
-		$this->redirect(null, 'login', $action, $return_to);		
+		$this->redirect(null, 'login');		
 	}
 	
 	function redirectWithAdmin($action)
@@ -316,11 +342,14 @@ class Controller
 	function forward($method, $request, $action)
 	{
 		$this->log->debug("Forwarding to action '$action' ($method, \n" . var_export($request, true) . ")");
+		
+		$this->restoreRequestInfo();
+
 		// Dispatch request to appropriate handler.
 		$handler = $this->getHandler($action);
 		if ($handler->requireAuth() && $this->server->getAccount() == null) {
 			$this->log->debug('Action requires authentication and user is not authenticated, so forwarding him to login');
-			$result = $this->forward($method, $request, 'login');
+			$this->redirectWithLogin();
 		}
 
 		$this->log->debug("Handing over the job to $action action's handler");
@@ -330,27 +359,6 @@ class Controller
 		}
 	}
 
-
-	function getRequestInfo()
-	{
-	    if (isset($_SESSION['request'])) {
-	        return array(unserialize($_SESSION['request']),
-	                     unserialize($_SESSION['sreg_request']));
-	    } else {
-	        return false;
-	    }
-	}
-
-	function setRequestInfo($info=null, $sreg=null)
-	{
-	    if (!isset($info)) {
-	        unset($_SESSION['request']);
-	    } else {
-	        $_SESSION['request'] = serialize($info);
-	        $_SESSION['sreg_request'] = serialize($sreg);
-	    }
-	}
-	
 	function handleResponse($response)
 	{
 	    $webresponse =& $this->server->openid_server->encodeResponse($response);

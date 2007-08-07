@@ -29,23 +29,26 @@ class Trust extends Action
 	function process($method, &$request)
 	{
 		$account = $this->server->getAccount();
-	    list($request_info, $sreg) = $this->controller->getRequestInfo();
+	    $decoded_openid_request = $this->openid_server->decodeRequest();
 	
-	    if ($request_info === FALSE) {
+	    if ($decoded_openid_request === FALSE) {
 	    	trigger_error('Invalid request.');
 	    	return false;
 	    }
 	
 	    $urls = $this->storage->getUrlsForAccount($account);
 	    $openid_identity = $request->identity;
-	
-	    if (! in_array($request_info->identity, $urls)){
-	        $this->server->clearAccount();
-	        $this->controller->setRequestInfo($request_info, $sreg);
-		    if ($this->server->needAuth()) {
-		    	$this->controller->redirectWithLogin($request);
-		    }
+	    
+	    /*
+	     * TODO: This is nonsense.
+	    if (! in_array($decoded_openid_request->identity, $urls)){
+	    	$this->server->clearAccount();
+	    	$this->controller->setRequestInfo($request_info, $sreg);
+	    	if ($this->server->needAuth()) {
+	    		$this->controller->redirectWithLogin($request);
+	    	}
 	    }
+	    */
 	
 	    if ($method == 'POST') {
 	        $trusted = false;
@@ -68,12 +71,13 @@ class Trust extends Action
 	            if (array_key_exists('sreg', $request)) {
 	                $allowed_fields = array_keys($request['sreg']);
 	            }
-	            $response = $request_info->answer(true);
-	            $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
+	            $response = $openid_decoded_request->answer(true);
+
+				// TODO: Fix Sreg implementation
+	            // $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
 	            
 	            // Propagate the cookies
-	            // TODO: Check if the user agent has changed (so that we don't have to issue
-	            // a cookie
+	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
 	            $sites = $this->storage->getRelatedSites($request_info->trust_root);
 			    $this->template->assign('trust_root', $request_info->trust_root);
 		    	$this->template->assign('identity', $request_info->identity);
@@ -86,8 +90,8 @@ class Trust extends Action
 	            return true;
 	            
 	        } else {
-	            $response = $request_info->answer(false);
-	            $this->controller->setRequestInfo();
+	            $response = $openid_decoded_request->answer(false);
+	            $this->controller->clear();
 	        	$this->controller->handleResponse($response);
 	        	
 	        	// The Controller->handleResponse shouldn't return. If it has,
@@ -96,6 +100,7 @@ class Trust extends Action
 	        }
 	    }
 	
+		/*
 	    if ($sreg != FALSE) {
 	        // Get the profile data and mark it up so it's easy to tell
 	        // what's required and what's optional.
@@ -130,7 +135,8 @@ class Trust extends Action
 	        $this->template->assign('profile', $new_profile);
 	        $this->template->assign('policy_url', $policy_url);
 	    }
-	
+		*/
+		
 	    $this->template->assign('trust_root', $request_info->trust_root);
 	    $this->template->assign('identity', $request_info->identity);
 	    $this->template->display('trust.tpl');

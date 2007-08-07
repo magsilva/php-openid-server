@@ -25,10 +25,14 @@ class Login extends Action
 	{
 		if ($this->server->getAccount() != null) {
 			$this->log->err('Trying to login when already is authenticated.');
+			return true;
 		}
+		
 		
 		// Do the authentication.
 	    if ($method == 'POST') {
+	    	$this->log->debug('Starting authentication process');
+	    
 	        // Process login.
 	        $u = $request['username'];
 	        $p = $request['passwd'];
@@ -39,7 +43,7 @@ class Login extends Action
 	    			if (md5($p) == ADMIN_PASSWORD_MD5) {
 		                // Log in as admin.
 		                $this->server->setAccount($u, true);
-					    $this->template->display('main.tpl');
+                    	$this->controller->forward($method, $request, 'index');
 	    			} else {
 	    				trigger_error('Incorrect authentication information.');
 	    			}
@@ -54,7 +58,6 @@ class Login extends Action
                     	$this->controller->forward($method, $request, 'index');
                 	}
                 	return true;
-                    
 	            } else {
 	                trigger_error('The confirmation request was rejected, or timed out.');
 	            }
@@ -62,44 +65,8 @@ class Login extends Action
 				trigger_error('Please fill in all the available fields.');
 			}
 	    }
-
-		// Gather the data required to the authentication process.	
-	    if (array_key_exists('action', $request)) {
-	        $this->template->assign('action', $request['action']);
-	    }
-	    if (array_key_exists('next_action', $request)) {
-	        $this->template->assign('next_action', $request['next_action']);
-	    }
-		if (array_key_exists('return_to', $request)) {
-	        $this->template->assign('return_to', $request['return_to']);
-	    }
-		if (array_key_exists('openid_return_to', $request)) {
-	        $this->template->assign('return_to', $request['openid_return_to']);
-	    }
-	
-	    list($info, $sreg) = $this->controller->getRequestInfo();
-	
-	    if ($info) {
-	        // Reverse lookup from URL to account name.
-	        $username = $this->storage->getAccountForUrl($info->identity);
-	
-	        if ($username != null) {
-	            $this->template->assign('required_user', $username);
-	            $this->template->assign('identity_url', $info->identity);
-	        } else {
-	            // Return an OpenID error because this server does not
-	            // know about that URL.
-	            $this->server->clearAccount();
-	            $this->controller->setRequestInfo();
-	            trigger_error('You\'ve tried to authenticate using a URL this '.
-	                                'server does not manage (<code>' . $info->identity . '</code>). ' .
-	                                'If you are using your own identity page, there may be a typo ' .
-	                                'in the URL.');
-	        }
-	    }
-	
+		
 	    $this->template->display('login.tpl');
-	    exit();
 	}
 }
 

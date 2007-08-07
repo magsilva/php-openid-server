@@ -45,7 +45,7 @@ class Serve extends Action
 	        $this->controller->handleResponse($request);
 	    }
 	
-	    $this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
+	    $this->controller->saveRequestInfo();
 	
 	    if (in_array($request->mode, array('checkid_immediate', 'checkid_setup'))) {
 			$this->log->info('OpenID request is for authentication, proceeding');
@@ -69,7 +69,7 @@ class Serve extends Action
 	     	if ($account != null && $account != $this->storage->getAccountForUrl($request->identity)) {
 	     		$this->log->info("User '$account' ($openid_identity) is authenticated, but not with the expected account ($expected_account)");
 	     		$this->server->clearAccount();
-	     		$this->controller->setRequestInfo($request, $this->server->requestSregData($http_request));
+	     		$this->controller->saveRequestInfo();
 	     		$this->controller->forward($method, $request, 'serve');
 	     		return true;
 	     	}
@@ -90,7 +90,7 @@ class Serve extends Action
 	        $response =& $this->openid_server->handleRequest($request);
 	    }
 	
-	    $this->controller->setRequestInfo();
+	    $this->controller->clearRequestInfo();
 		$this->controller->handleResponse($response);
 		
 		return true;
