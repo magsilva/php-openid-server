@@ -100,7 +100,7 @@ class OpenIDServer
     	}
     	return $server;
 */
-    	if ($this->openid_server == null) {
+    	if (! isset($this->openid_server) || $this->openid_server == null) {
     		$this->openid_server =& new Auth_OpenID_Server($this->openid_store);
     	}
 	}
@@ -108,24 +108,24 @@ class OpenIDServer
 	
 	function setAccount($account_name, $admin = false)
 	{
-		$_SESSION['account'] = $account_name;
+		$_SESSION['php_openidserver_account'] = $account_name;
 		if ($admin) {
-			$_SESSION['admin'] = 1;
+			$_SESSION['php_openidserver_admin'] = 1;
 		}
 	}
 
 	function clearAccount()
 	{
-	    unset($_SESSION['account']);
-	    unset($_SESSION['admin']);
-	    unset($_SESSION['request']);
-	    unset($_SESSION['sreg_request']);
+	    unset($_SESSION['php_openidserver_account']);
+	    unset($_SESSION['php_openidserver_admin']);
+	    unset($_SESSION['php_openidserver_request']);
+	    unset($_SESSION['php_openidserver_sreg_request']);
 	}
 
 	function getAccount()
 	{
-	    if (array_key_exists('account', $_SESSION)) {
-	        return $_SESSION['account'];
+	    if (array_key_exists('php_openidserver_account', $_SESSION)) {
+	        return $_SESSION['php_openidserver_account'];
 	    }
 	
 	    return null;
@@ -149,7 +149,7 @@ class OpenIDServer
 	
 	function needAdmin()
 	{
-	    if (!isset($_SESSION['admin'])) {
+	    if (!isset($_SESSION['php_openidserver_admin'])) {
 	        return true;
 	    }
 	    return false;
@@ -157,17 +157,17 @@ class OpenIDServer
 	
 	function addMessage($str)
 	{
-    	if (!array_key_exists('messages', $_SESSION)) {
-        	$_SESSION['messages'] = array();
+    	if (!array_key_exists('php_openidserver_messages', $_SESSION)) {
+        	$_SESSION['php_openidserver_messages'] = array();
     	}
 
-    	$_SESSION['messages'][] = $str;
+    	$_SESSION['php_openidserver_messages'][] = $str;
 	}
 
 	function getMessages()
 	{
-    	if (array_key_exists('messages', $_SESSION)) {
-        	return $_SESSION['messages'];
+    	if (array_key_exists('php_openidserver_messages', $_SESSION)) {
+        	return $_SESSION['php_openidserver_messages'];
     	} else {
         	return array();
     	}
@@ -175,7 +175,7 @@ class OpenIDServer
 
 	function clearMessages()
 	{
-    	unset($_SESSION['messages']);
+    	unset($_SESSION['php_openidserver_messages']);
 	}
 
 	function requestSregData($request)

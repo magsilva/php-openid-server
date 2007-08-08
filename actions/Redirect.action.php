@@ -24,10 +24,12 @@ class Redirect extends Action
 {
 	function process($method, &$request)
 	{
-		$response = $_SESSION['response'];
-	    $this->controller->clearRequestInfo();
-	    $this->controller->handleResponse($response);
-	    
+		$response = $_SESSION['php_openidserver_response'];
+		if (isset($response) && ! empty($response)) {
+		    // $this->controller->clearRequestInfo();
+		    $this->controller->handleResponse($response);
+		}
+		
 		// The Controller->handleResponse shouldn't return. If it has,
 		// something wrong has gone wrong.
 	    return false;   

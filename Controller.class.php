@@ -66,25 +66,38 @@ class Controller
 		
 		// Vars in $_REQUEST are *not* a reference to the respective $_POST and $_GET and
 		// $_COOKIE ones.
-
-		$_SESSION['request'] = $_REQUEST;
+		if (array_key_exists('php_openidserver_request', $_SESSION)) {
+			$this->log->debug("Cannot save HTTP request info (there is one stored already).");
+			return;
+		}
+		
+		$_SESSION['php_openidserver_request'] = array();
+		foreach ($_REQUEST as $key => $value) {
+			$_SESSION['php_openidserver_request'][$key] = $value;
+		}
+		$this->log->debug("Saved HTTP request info\n" . var_export($_SESSION['php_openidserver_request'], true) . ")");
 	}
 	
 	function restoreRequestInfo()
 	{
-		if (isset($_SESSION['request'])) {
-			// $_REQUEST = $_SESSION['request'];
-			// Preserve previous request values (if they do not conflict).
-			foreach ($_SESSION['request'] as $key => $val) {
-				$_REQUEST['$key'] = $val;
+		if (array_key_exists('php_openidserver_request', $_SESSION)) {
+			foreach ($_REQUEST as $key => $value) {
+				unset($_REQUEST[$key]);
+			}
+			foreach ($_SESSION['php_openidserver_request'] as $key => $val) {
+			 	$_REQUEST[$key] = $val;
 			}
 			$this->clearRequestInfo();
+			$this->log->debug("Restored HTTP request info\n" . var_export($_REQUEST, true) . ")");
 		}
 	}
 
 	function clearRequestInfo()
 	{
-		unset($_SESSION['request']);
+		if (array_key_exists('php_openidserver_request', $_SESSION)) {
+			$this->log->debug("Clearing saved HTTP request info");
+			unset($_SESSION['php_openidserver_request']);
+		}
 	}
 
 	function getHandler($action)
@@ -256,9 +269,6 @@ class Controller
 		$this->template_engine->assign('RAW_SERVER_URL', $this->getServerURL());
 		$this->template_engine->assign('SERVER_URL', $this->getServerURLWithLanguage());
 
-		// Restore previous request content (if any)
-		$this->restoreRequestInfo();
-	
 		// First, get the request data.
 		list($method, $request) = $this->getRequest();
 		
@@ -281,8 +291,6 @@ class Controller
 	
 	function redirect($url = null, $action = null, $next_action = null, $return_to = null)
 	{
-		$this->saveRequestInfo();
-
 		// If we didn't assigned an URL, the $url actually has the action.		
 		if ($url != null && (strpos($url, 'http') === FALSE || strpos($url, 'http') != 0)) {
 			// And, if our $url is the action, then $action is the $next_action.
@@ -314,22 +322,27 @@ class Controller
 			$url .= '&return_to=' . htmlentities($return_to);
 		}
 
-	    if ($action != null && isset($_GET['lang'])) {
+	    if (isset($_GET['lang'])) {
 	        if (strpos($url, '?') === false) {
 	            $url .= '?lang=' . $this->template_engine->language;
 	        } else {
 	            $url .= '&lang=' . $this->template_engine->language;
 	        }
 	    }
-
-		$this->log->info("Redirecting to action '$action', next action is '$next_action', and return URL is '$return_to' ($url)");
-	    header('Location: ' . $url);
-	    exit(0);
+	
+		if (headers_sent($file, $line)){
+    		$this->log->warn("Headers were already sent in $file on line $line, redirection may fail");
+		}
+		
+		$this->log->info("Redirecting to '$url'");
+	 	header('Location: ' . $url);
+	    exit();
 	}
 	
-	function redirectWithLogin($request)
+	function redirectWithLogin()
 	{
-		$this->log->debug("Redirecting with login to '$action'");
+		$this->log->debug("Redirecting to login");
+		$this->saveRequestInfo();
 		$this->redirect(null, 'login');		
 	}
 	
@@ -343,8 +356,6 @@ class Controller
 	{
 		$this->log->debug("Forwarding to action '$action' ($method, \n" . var_export($request, true) . ")");
 		
-		$this->restoreRequestInfo();
-
 		// Dispatch request to appropriate handler.
 		$handler = $this->getHandler($action);
 		if ($handler->requireAuth() && $this->server->getAccount() == null) {
@@ -362,11 +373,15 @@ class Controller
 	function handleResponse($response)
 	{
 	    $webresponse =& $this->server->openid_server->encodeResponse($response);
+	    if (! isset($webresponse) || empty($webresponse)) {
+	    	exit();
+	    }
 	
-		if ($webresponse->headers != null) {
-		    foreach ($webresponse->headers as $k => $v) {
-		        header("$k: $v");
-		    }
+		// TODO: if $webresponse == Auth_OpenID_EncodingError
+	    if (isset($webresponse->headers)) {
+	    	foreach ($webresponse->headers as $k => $v) {
+	        	header("$k: $v");
+	    	}
 		}
 
 	    header('Connection: close');

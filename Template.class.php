@@ -85,7 +85,7 @@ class Template extends Smarty
         $this->assign('errors', $this->errors);
         $this->assign('messages', $this->messages);
         $this->assign('SITE_TITLE', SITE_TITLE);
-        $this->assign('ADMIN', isset($_SESSION['admin']));
+        $this->assign('ADMIN', isset($_SESSION['php_openidserver_admin']));
         $this->assign('SITE_ADMIN_EMAIL', SITE_ADMIN_EMAIL);
         $this->assign('ALLOW_PUBLIC_REGISTRATION', ALLOW_PUBLIC_REGISTRATION);
         $this->assign('current_language', 'lang=' . $this->language);

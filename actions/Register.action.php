@@ -29,8 +29,8 @@ class Register extends Action
 	
 	    if ($method == 'POST') {
 	        $hash = null;
-	        if (array_key_exists('hash', $_SESSION)) {
-	            $hash = $_SESSION['hash'];
+	        if (array_key_exists('php_openidserver_hash', $_SESSION)) {
+	            $hash = $_SESSION['php_openidserver_hash'];
 	        }
 	
 	        $success = true;

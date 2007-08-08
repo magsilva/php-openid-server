@@ -25,12 +25,10 @@ class Login extends Action
 	{
 		if ($this->server->getAccount() != null) {
 			$this->log->err('Trying to login when already is authenticated.');
-			return true;
 		}
 		
-		
 		// Do the authentication.
-	    if ($method == 'POST') {
+	    if ($method == 'POST' && array_key_exists('username', $request) && array_key_exists('passwd', $request)) {
 	    	$this->log->debug('Starting authentication process');
 	    
 	        // Process login.
@@ -42,7 +40,7 @@ class Login extends Action
 	        	if ($u == ADMIN_USERNAME) {
 	    			if (md5($p) == ADMIN_PASSWORD_MD5) {
 		                // Log in as admin.
-		                $this->server->setAccount($u, true);
+		                $this->server->setAccount($u, true);                
                     	$this->controller->forward($method, $request, 'index');
 	    			} else {
 	    				trigger_error('Incorrect authentication information.');
@@ -52,12 +50,12 @@ class Login extends Action
 	            if ($this->auth->authenticate($u, $p)) {
 	            	$this->server->setAccount($u);
 		            $this->log->info("User $u has been authenticated");
-	            	    
-	                // Default action is 'index'.
-                	if (array_key_exists('action', $request) && $request['action'] == 'login') {
-                    	$this->controller->forward($method, $request, 'index');
-                	}
-                	return true;
+	            	$this->controller->restoreRequestInfo();
+	            	if ($_REQUEST['action'] == 'login') {
+                    	$this->controller->forward($method, $request, 'index');            		
+	            	} else {
+	                	$this->controller->processRequest();
+	            	}
 	            } else {
 	                trigger_error('The confirmation request was rejected, or timed out.');
 	            }

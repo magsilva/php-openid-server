@@ -30,7 +30,7 @@ class Account extends Action
 	        $timezone_strings;
 	
 	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin($request);
+	    	$this->controller->redirectWithLogin();
 	    }
 	    
 	    $account = $this->server->getAccount();

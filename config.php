@@ -1,5 +1,7 @@
 <?php
 
+require_once('Log.php');
+
 /**
  * The configuration settings for the PHP OpenID Server.
  */

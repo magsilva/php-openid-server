@@ -25,10 +25,10 @@ class Admin extends Action
 	{
 	    
 	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin($request);
+	    	$this->controller->redirectWithLogin();
 	    }
 	    if ($this->server->needAdmin()) {
-	    	$this->controller->redirectWithAdmin($request);
+	    	$this->controller->redirectWithAdmin();
 	    }
 	
 	    if (array_key_exists('username', $request)) {

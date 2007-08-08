@@ -2,8 +2,7 @@
 
 <form name="loginform" method="post" action="{$SERVER_URL}">
 
-{paste_request_parameters_as_form}
-{$imported_parameters}
+<input type="hidden" name="action" value="login" />
 
 <table class="login">
 <tr>

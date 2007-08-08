@@ -37,7 +37,7 @@ class Trust extends Action
 	    }
 	
 	    $urls = $this->storage->getUrlsForAccount($account);
-	    $openid_identity = $request->identity;
+	    $openid_identity = $decoded_openid_request->identity;
 	    
 	    /*
 	     * TODO: This is nonsense.
@@ -45,7 +45,7 @@ class Trust extends Action
 	    	$this->server->clearAccount();
 	    	$this->controller->setRequestInfo($request_info, $sreg);
 	    	if ($this->server->needAuth()) {
-	    		$this->controller->redirectWithLogin($request);
+	    		$this->controller->redirectWithLogin();
 	    	}
 	    }
 	    */
@@ -53,16 +53,16 @@ class Trust extends Action
 	    if ($method == 'POST') {
 	        $trusted = false;
 	        if (isset($request['trust_forever'])) {
-	            $this->storage->trustLog($account, $request_info->trust_root, true);
-	            $this->log->info("User $account trusts $request_info->trust_root forever");
+	            $this->storage->trustLog($account, $decoded_openid_request->trust_root, true);
+	            $this->log->info("User $account trusts $decoded_openid_request->trust_root forever");
 	            $trusted = true;
 	        } else if (isset($request['trust_once'])) {
-	            $this->storage->trustLog($account, $request_info->trust_root, false);
-	            $this->log->info("User $account trusts $request_info->trust_root just this time");
+	            $this->storage->trustLog($account, $decoded_openid_request->trust_root, false);
+	            $this->log->info("User $account trusts $decoded_openid_request->trust_root just this time");
 	            $trusted = true;
 	        } else {
-	            $this->storage->trustLog($account, $request_info->trust_root, false);
-	            $this->log->info("User $account doesn't trust $request_info->trust_root");
+	            $this->storage->trustLog($account, $decoded_openid_request->trust_root, false);
+	            $this->log->info("User $account doesn't trust $decoded_openid_request->trust_root");
 	        }
 	
 	        if ($trusted) {
@@ -78,15 +78,15 @@ class Trust extends Action
 	            
 	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
-	            $sites = $this->storage->getRelatedSites($request_info->trust_root);
-			    $this->template->assign('trust_root', $request_info->trust_root);
-		    	$this->template->assign('identity', $request_info->identity);
+	            $sites = $this->storage->getRelatedSites($decoded_openid_request->trust_root);
+			    $this->template->assign('trust_root', $decoded_openid_request->trust_root);
+		    	$this->template->assign('identity', $decoded_openid_request->identity);
 	            $this->template->assign('related_sites', $sites);
 	            $this->template->assign('action', 'redirect');
 	            $this->template->assign('redirect_html', $this->controller->getServerURL() . '?action=redirect');
 	            	            
 			    $this->template->display('redirect.tpl');
-	            $_SESSION['response'] = $response;
+	            $_SESSION['php_openidserver_response'] = $response;
 	            return true;
 	            
 	        } else {

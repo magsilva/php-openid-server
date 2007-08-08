@@ -24,7 +24,7 @@ class Sites extends Action
 	function process($method, &$request)
 	{
 	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin($request);
+	    	$this->controller->redirectWithLogin();
 	    }
 	    
 	    $account = $this->server->getAccount();

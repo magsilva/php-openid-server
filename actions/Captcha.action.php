@@ -30,7 +30,7 @@ class Captcha extends Action
 	    $hash = $captcha->generateCaptcha(6);
 	
 	    // Put the captcha hash into the session so it can be checked.
-	    $_SESSION['hash'] = $hash;
+	    $_SESSION['php_openidserver_hash'] = $hash;
 	}
 }
 
