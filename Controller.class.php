@@ -284,6 +284,18 @@ class Controller
 		if (array_key_exists('action', $request)) {
 			$action = $request['action'];
 		}
+		
+		if ($action == 'serve' && array_key_exists('openid_mode', $request)) {
+			switch ($_REQUEST['openid_mode']) {
+				case 'associate':
+					$action = 'associate';
+				case 'checkid_setup':
+					$action = 'checkIdSetup';
+				case 'checkid_immediate':
+					$action = 'checkIdImmediate';
+			}
+		}  
+		
 		$this->forward($method, $request, $action);
 		exit();
 	}
