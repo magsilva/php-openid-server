@@ -19,6 +19,14 @@ Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 
 require_once('CheckId.class.php');
 
+/**
+ * Ask an identity provider if an end user owns the claimed identifier, but be
+ * willing to wait for the reply. The consumer will pass the user agent to the
+ * identity provider for a short period of time which will return either a
+ * 'yes' or 'cancel' answer.
+ * HTTP method: GET
+ * Flow: Consumer -> User agent -> IdP -> User agent -> Consumer
+ */
 class CheckIdImmediate extends CheckId
 {
 	function requireAuth()

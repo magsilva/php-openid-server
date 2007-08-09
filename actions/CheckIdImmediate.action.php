@@ -19,6 +19,12 @@ Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 
 require_once('Action.class.php');
 
+/**
+ * Ask an identity provider if an end user owns the claimed identifier,
+ * getting back an immediate 'yes' or 'can't say' anwser.
+ * Flow: Consumer -> User Agent -> IdP -> User Agent -> Consumer
+ * HTTP method: GET
+ */
 class CheckIdImmediate extends Action
 {
 	function requireAuth()

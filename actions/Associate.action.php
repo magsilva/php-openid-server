@@ -19,6 +19,11 @@ Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 
 require_once('Action.class.php');
 
+/**
+ * Establish a shared secret between consumer and identity provider.
+ * Flow: consumer -> IdP -> consumer
+ * HTTP method: POST
+ */
 class Associate extends Action
 {
 	function requireAuth()
@@ -28,6 +33,10 @@ class Associate extends Action
 
 	function process($method, &$request)
 	{
+		if (! array_key_exists('openid_session_type', $request) || empty($request['openid_session_type'])) {
+			$this->log->debug('Client using a cleartext session for key exchange.');
+		}
+		
 	    $decoded_openid_request = $this->openid_server->decodeRequest($request);
 
 	    if (! $decoded_openid_request) {
