@@ -37,18 +37,18 @@ class Associate extends Action
 			$this->log->debug('Client using a cleartext session for key exchange.');
 		}
 		
-	    $decoded_openid_request = $this->openid_server->decodeRequest($request);
-
+	    $decoded_openid_request = $this->openid_server->decodeRequest();
 	    if (! $decoded_openid_request) {
-	        trigger_error('Invalid OpenID request');
+	        trigger_error('Invalid OpenID request: ' . $decoded_openid_request['text']);
 	        return false;
 	    }
 
 	    if (is_a($decoded_openid_request, 'Auth_OpenID_ServerError')) {
-	        $this->log->info('Invalid OpenID request');
+	        $this->log->info('Invalid OpenID request ' . $decoded_openid_request['text']);
 	        $this->controller->handleResponse($decoded_openid_request);
 	    }
 
+		$this->log->debug('Client has been associated');
         $response =& $this->openid_server->handleRequest($decoded_openid_request);
 		$this->controller->handleResponse($response);
 		

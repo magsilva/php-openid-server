@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once('Action.class.php');
+require_once('CheckId.class.php');
 
 /**
  * Ask an identity provider if an end user owns the claimed identifier,
@@ -25,7 +25,7 @@ require_once('Action.class.php');
  * Flow: Consumer -> User Agent -> IdP -> User Agent -> Consumer
  * HTTP method: GET
  */
-class CheckIdImmediate extends Action
+class CheckIdImmediate extends CheckId
 {
 	function requireAuth()
 	{
@@ -58,7 +58,7 @@ class CheckIdImmediate extends Action
             } else {
             	// TODO: shouldn't we fail?
             	$this->log->info("User '$account' ($openid_identity) is authenticated but server '$request->trust_root' isn't trusted");
-                $this->controller->forward($method, $decoded_openid_request, 'trust');
+                $this->controller->forward($method, $this->decoded_openid_request, 'trust');
                 // The forward shouldn't return if everything is ok.'
                 return false;
                 

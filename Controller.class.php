@@ -59,6 +59,7 @@ class Controller
 
 	function saveRequestInfo()
 	{
+		$this->log->debug('Saving HTTP request info');
 		// http://br.php.net/manual/en/language.variables.predefined.php#72571
 		// PHP automatically replace dots ('.') AND spaces (' ') with underscores ('_')
 		// in any incoming POST or GET (or REQUEST) variables ('.' and ' ' are not valid
@@ -67,38 +68,85 @@ class Controller
 		// Vars in $_REQUEST are *not* a reference to the respective $_POST and $_GET and
 		// $_COOKIE ones.
 		if (array_key_exists('php_openidserver_request', $_SESSION)) {
-			$this->log->debug("Cannot save HTTP request info (there is one stored already).");
+			$this->log->err("Cannot save HTTP request info (there is one stored already).");
 			return;
 		}
 		
 		$_SESSION['php_openidserver_request'] = array();
-		foreach ($_REQUEST as $key => $value) {
-			$_SESSION['php_openidserver_request'][$key] = $value;
+		$_SESSION['php_openidserver_request']['get'] = array();
+		$_SESSION['php_openidserver_request']['post'] = array();
+		$_SESSION['php_openidserver_request']['request'] = array();
+		$_SESSION['php_openidserver_request']['request_method'] = $_SERVER['REQUEST_METHOD'];
+		$_SESSION['php_openidserver_request']['query_string'] = $_SERVER['QUERY_STRING'];
+		
+		$raw_post = file_get_contents('php://input');
+		if ($raw_post === false) {
+			$raw_post = $GLOBALS['HTTP_RAW_POST_DATA'];	
 		}
-		$this->log->debug("Saved HTTP request info\n" . var_export($_SESSION['php_openidserver_request'], true) . ")");
+		$_SESSION['php_openidserver_request']['raw_post'] = $raw_post;
+		
+		
+		foreach ($_GET as $key => $value) {
+			$_SESSION['php_openidserver_request']['get'][$key] = $value;
+		}
+		foreach ($_POST as $key => $value) {
+			$_SESSION['php_openidserver_request']['post'][$key] = $value;
+		}
+		foreach ($_REQUEST as $key => $value) {
+			$_SESSION['php_openidserver_request']['request'][$key] = $value;
+		}
+		
 	}
 	
 	function restoreRequestInfo()
-	{
+	{	
 		if (array_key_exists('php_openidserver_request', $_SESSION)) {
+			$this->log->debug('Restoring HTTP request info');
+			
+			foreach ($_GET as $key => $value) {
+				unset($_GET[$key]);
+			}
+			foreach ($_POST as $key => $value) {
+				unset($_POST[$key]);
+			}
 			foreach ($_REQUEST as $key => $value) {
 				unset($_REQUEST[$key]);
 			}
-			foreach ($_SESSION['php_openidserver_request'] as $key => $val) {
-			 	$_REQUEST[$key] = $val;
+			
+			$_SERVER['REQUEST_METHOD'] = $_SESSION['php_openidserver_request']['request_method'];
+			$_SERVER['QUERY_STRING'] = $_SESSION['php_openidserver_request']['query_string'];
+			$GLOBALS['HTTP_RAW_POST_DATA'] = $_SESSION['php_openidserver_request']['raw_post']; 	
+
+			foreach ($_SESSION['php_openidserver_request']['get'] as $key => $value) {
+				$_GET[$key] = $value;
 			}
+			foreach ($_SESSION['php_openidserver_request']['post'] as $key => $value) {
+				$_POST[$key] = $value;
+			}
+			foreach ($_SESSION['php_openidserver_request']['request'] as $key => $value) {
+				$_REQUEST[$key] = $value;
+			}
+			
 			$this->clearRequestInfo();
-			$this->log->debug("Restored HTTP request info\n" . var_export($_REQUEST, true) . ")");
 		}
 	}
 
 	function clearRequestInfo()
 	{
-		if (array_key_exists('php_openidserver_request', $_SESSION)) {
-			$this->log->debug("Clearing saved HTTP request info");
+		if ($this->hasRequestInfo()) {
+			$this->log->debug('Clearing saved HTTP request info');
 			unset($_SESSION['php_openidserver_request']);
 		}
 	}
+
+	function hasRequestInfo()
+	{
+		if (array_key_exists('php_openidserver_request', $_SESSION)) {
+			return true;
+		}
+		return false;
+	}
+
 
 	function getHandler($action)
 	{
@@ -289,10 +337,13 @@ class Controller
 			switch ($_REQUEST['openid_mode']) {
 				case 'associate':
 					$action = 'associate';
+					break;
 				case 'checkid_setup':
 					$action = 'checkIdSetup';
+					break;
 				case 'checkid_immediate':
 					$action = 'checkIdImmediate';
+					break;
 			}
 		}  
 		
@@ -353,7 +404,7 @@ class Controller
 	
 	function redirectWithLogin()
 	{
-		$this->log->debug("Redirecting to login");
+		$this->log->debug('Redirecting to login');
 		$this->saveRequestInfo();
 		$this->redirect(null, 'login');		
 	}
@@ -366,7 +417,7 @@ class Controller
 	
 	function forward($method, $request, $action)
 	{
-		$this->log->debug("Forwarding to action '$action' ($method, \n" . var_export($request, true) . ")");
+		$this->log->debug("Forwarding to action '$action'");
 		
 		// Dispatch request to appropriate handler.
 		$handler = $this->getHandler($action);

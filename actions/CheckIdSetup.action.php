@@ -27,7 +27,7 @@ require_once('CheckId.class.php');
  * HTTP method: GET
  * Flow: Consumer -> User agent -> IdP -> User agent -> Consumer
  */
-class CheckIdImmediate extends CheckId
+class CheckIdSetup extends CheckId
 {
 	function requireAuth()
 	{
@@ -39,7 +39,7 @@ class CheckIdImmediate extends CheckId
 	    parent::process($method, $request);
 	    
 	    // User is authenticated but OpenID doesn't accept it (I don't know how, but...)
-		if ($this->account != $this->storage->getAccountForUrl($this->decoded_openid_request->identity)) {
+		if ($this->account !== $this->expected_account) {
 	    	$this->log->info("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)");
 	     	$this->server->clearAccount();
 	     	$this->controller->forward($method, $this->decoded_openid_request, 'serve');
@@ -48,12 +48,12 @@ class CheckIdImmediate extends CheckId
 		}
 
 		// User is authenticated.	        
-  		if ($this->storage->isTrusted($this->account, $decoded_openid_request->trust_root)) {
-			$this->log->info("User '$account' ($this->openid_identity) is authenticated and server '$this->decoded_openid_request->trust_root' is trusted");
+  		if ($this->storage->isTrusted($this->account, $this->decoded_openid_request->trust_root)) {
+			$this->log->info("User '$this->account' ($this->openid_identity) is authenticated and server '$this->decoded_openid_request->trust_root' is trusted");
 			$response =& $this->decoded_openid_request->answer(true);
 			$this->server->addSregData($this->account, $response, $request);
 		} else {
-			$this->log->info("User '$this->account' ($this->openid_identity) is authenticated but server '$request->trust_root' isn't trusted");
+			$this->log->info("User '$this->account' ($this->openid_identity) is authenticated but server '$this->decoded_openid_request->trust_root' isn't trusted");
             $this->controller->forward($method, $this->decoded_openid_request, 'trust');
 	     	// The forward shouldn't return if everything is ok.
             return false;

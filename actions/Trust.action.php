@@ -32,7 +32,7 @@ class Trust extends Action
 	    $decoded_openid_request = $this->openid_server->decodeRequest();
 	
 	    if ($decoded_openid_request === FALSE) {
-	    	trigger_error('Invalid request.');
+	        trigger_error('Invalid OpenID request: ' . $decoded_openid_request->text);
 	    	return false;
 	    }
 	

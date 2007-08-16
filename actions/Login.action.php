@@ -50,11 +50,12 @@ class Login extends Action
 	            if ($this->auth->authenticate($u, $p)) {
 	            	$this->server->setAccount($u);
 		            $this->log->info("User $u has been authenticated");
-	            	$this->controller->restoreRequestInfo();
-	            	if ($_REQUEST['action'] == 'login') {
-                    	$this->controller->forward($method, $request, 'index');            		
-	            	} else {
+	            	if ($this->controller->hasRequestInfo()) {
+		            	$this->controller->restoreRequestInfo();
 	                	$this->controller->processRequest();
+	            	} else {
+		            	$this->controller->clearRequestInfo();
+                    	$this->controller->forward($method, $request, 'index'); 
 	            	}
 	            } else {
 	                trigger_error('The confirmation request was rejected, or timed out.');

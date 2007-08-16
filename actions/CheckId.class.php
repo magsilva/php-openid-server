@@ -31,21 +31,21 @@ class CheckId extends Action
 	
 	function process($method, &$request)
 	{
-	    $decoded_openid_request = $this->openid_server->decodeRequest($request);
+	    $this->decoded_openid_request = $this->openid_server->decodeRequest();
 
-	    if (! $decoded_openid_request) {
-	        trigger_error('Invalid OpenID request');
+	    if (! $this->decoded_openid_request) {
+	        trigger_error('Invalid OpenID request: ' . $this->decoded_openid_request->text);
 	        return false;
 	    }
 
-	    if (is_a($decoded_openid_request, 'Auth_OpenID_ServerError')) {
-	        $this->log->info('Invalid OpenID request');
-	        $this->controller->handleResponse($decoded_openid_request);
+	    if (is_a($this->decoded_openid_request, 'Auth_OpenID_ServerError')) {
+	        trigger_error('Invalid OpenID request: ' . $this->decoded_openid_request->text);
+	        $this->controller->handleResponse($this->decoded_openid_request);
 	    }
 
-        $account = $this->server->getAccount();
-        $openid_identity = $decoded_openid_request->identity;
-        $expected_account = $this->storage->getAccountForUrl($openid_identity);
+        $this->account = $this->server->getAccount();
+        $this->openid_identity = $this->decoded_openid_request->identity;
+        $this->expected_account = $this->storage->getAccountForUrl($this->openid_identity);
 	}
 }
 
