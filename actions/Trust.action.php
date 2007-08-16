@@ -17,9 +17,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-require_once('Action.class.php');
+require_once('CheckId.class.php');
 
-class Trust extends Action
+/**
+ * Set the trust level for a site and it's related domains.
+ */
+class Trust extends CheckId
 {
 	function requireAuth()
 	{
@@ -28,17 +31,8 @@ class Trust extends Action
 	
 	function process($method, &$request)
 	{
-		$account = $this->server->getAccount();
-	    $decoded_openid_request = $this->openid_server->decodeRequest();
+		parent::process($method, $request);
 	
-	    if ($decoded_openid_request === FALSE) {
-	        trigger_error('Invalid OpenID request: ' . $decoded_openid_request->text);
-	    	return false;
-	    }
-	
-	    $urls = $this->storage->getUrlsForAccount($account);
-	    $openid_identity = $decoded_openid_request->identity;
-	    
 	    /*
 	     * TODO: This is nonsense.
 	    if (! in_array($decoded_openid_request->identity, $urls)){
@@ -49,20 +43,20 @@ class Trust extends Action
 	    	}
 	    }
 	    */
-	
+		// It will be post if it's an CheckId_Setup and GET if CheckId_Immediate?	
 	    if ($method == 'POST') {
 	        $trusted = false;
 	        if (isset($request['trust_forever'])) {
-	            $this->storage->trustLog($account, $decoded_openid_request->trust_root, true);
-	            $this->log->info("User $account trusts $decoded_openid_request->trust_root forever");
+	            $this->storage->trustLog($this->account, $this->decoded_openid_request->trust_root, true);
+	            $this->log->info("User $this->account trusts $this->decoded_openid_request->trust_root forever");
 	            $trusted = true;
 	        } else if (isset($request['trust_once'])) {
-	            $this->storage->trustLog($account, $decoded_openid_request->trust_root, false);
-	            $this->log->info("User $account trusts $decoded_openid_request->trust_root just this time");
+	            $this->storage->trustLog($this->account, $decoded_openid_request->trust_root, false);
+	            $this->log->info("User $this->account trusts $this->decoded_openid_request->trust_root just this time");
 	            $trusted = true;
 	        } else {
-	            $this->storage->trustLog($account, $decoded_openid_request->trust_root, false);
-	            $this->log->info("User $account doesn't trust $decoded_openid_request->trust_root");
+	            $this->storage->trustLog($this->account, $this->decoded_openid_request->trust_root, false);
+	            $this->log->info("User $this->account doesn't trust $this->decoded_openid_request->trust_root");
 	        }
 	
 	        if ($trusted) {
@@ -71,16 +65,16 @@ class Trust extends Action
 	            if (array_key_exists('sreg', $request)) {
 	                $allowed_fields = array_keys($request['sreg']);
 	            }
-	            $response = $openid_decoded_request->answer(true);
+	            $response = $this->decoded_openid_request->answer(true);
 
 				// TODO: Fix Sreg implementation
 	            // $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
 	            
 	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
-	            $sites = $this->storage->getRelatedSites($decoded_openid_request->trust_root);
-			    $this->template->assign('trust_root', $decoded_openid_request->trust_root);
-		    	$this->template->assign('identity', $decoded_openid_request->identity);
+	            $sites = $this->storage->getRelatedSites($this->decoded_openid_request->trust_root);
+			    $this->template->assign('trust_root', $this->decoded_openid_request->trust_root);
+		    	$this->template->assign('identity', $this->decoded_openid_request->identity);
 	            $this->template->assign('related_sites', $sites);
 	            $this->template->assign('action', 'redirect');
 	            $this->template->assign('redirect_html', $this->controller->getServerURL() . '?action=redirect');
@@ -90,7 +84,7 @@ class Trust extends Action
 	            return true;
 	            
 	        } else {
-	            $response = $openid_decoded_request->answer(false);
+	            $response = $decoded_openid_request->answer(false);
 	            $this->controller->clear();
 	        	$this->controller->handleResponse($response);
 	        	
@@ -137,8 +131,8 @@ class Trust extends Action
 	    }
 		*/
 		
-	    $this->template->assign('trust_root', $request_info->trust_root);
-	    $this->template->assign('identity', $request_info->identity);
+	    $this->template->assign('trust_root', $this->decoded_openid_request->trust_root);
+	    $this->template->assign('identity', $this->decoded_openid_request->identity);
 	    $this->template->display('trust.tpl');
 	    
 	    return true;
