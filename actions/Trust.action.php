@@ -44,13 +44,17 @@ class Trust extends CheckId
 	    }
 	    */
 		// It will be post if it's an CheckId_Setup and GET if CheckId_Immediate?	
-	    if ($method == 'POST') {
+	    if ($method == 'POST' && (isset($request['trust_forever']) || $request['trust_once'])) {
+	    	$trust_forever = isset($request['trust_forever']);
+	    	$trust_once = isset($request['trust_once']);
+	    	$this->controller->restoreRequestInfo();
+	    	
 	        $trusted = false;
-	        if (isset($request['trust_forever'])) {
+	        if ($trust_forever) {
 	            $this->storage->trustLog($this->account, $this->decoded_openid_request->trust_root, true);
 	            $this->log->info("User $this->account trusts $this->decoded_openid_request->trust_root forever");
 	            $trusted = true;
-	        } else if (isset($request['trust_once'])) {
+	        } else if ($trust_once) {
 	            $this->storage->trustLog($this->account, $decoded_openid_request->trust_root, false);
 	            $this->log->info("User $this->account trusts $this->decoded_openid_request->trust_root just this time");
 	            $trusted = true;
