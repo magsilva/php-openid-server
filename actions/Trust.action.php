@@ -17,12 +17,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-require_once('CheckId.class.php');
+require_once('Action.class.php');
 
 /**
  * Set the trust level for a site and it's related domains.
  */
-class Trust extends CheckId
+class Trust extends Action
 {
 	function requireAuth()
 	{
@@ -31,7 +31,15 @@ class Trust extends CheckId
 	
 	function process($method, &$request)
 	{
-		parent::process($method, $request);
+		$openid_request = $this->controller->getOpenIDRequestInfo();
+        $account = $this->server->getAccount();
+        $openid_identity = $openid_request->identity;
+        $expected_account = $this->storage->getAccountForUrl($openid_identity);
+	
+		if (! $openid_request) {
+			trigger_error('Invalid OpenID trust request');
+			return false;
+		}
 	
 	    /*
 	     * TODO: This is nonsense.
@@ -43,24 +51,24 @@ class Trust extends CheckId
 	    	}
 	    }
 	    */
+	    
 		// It will be post if it's an CheckId_Setup and GET if CheckId_Immediate?	
 	    if ($method == 'POST' && (isset($request['trust_forever']) || $request['trust_once'])) {
 	    	$trust_forever = isset($request['trust_forever']);
 	    	$trust_once = isset($request['trust_once']);
-	    	$this->controller->restoreRequestInfo();
 	    	
 	        $trusted = false;
 	        if ($trust_forever) {
-	            $this->storage->trustLog($this->account, $this->decoded_openid_request->trust_root, true);
-	            $this->log->info("User $this->account trusts $this->decoded_openid_request->trust_root forever");
+	            $this->storage->trustLog($account, $openid_request->trust_root, true);
+	            $this->log->info("User $account trusts $openid_request->trust_root forever");
 	            $trusted = true;
 	        } else if ($trust_once) {
-	            $this->storage->trustLog($this->account, $decoded_openid_request->trust_root, false);
-	            $this->log->info("User $this->account trusts $this->decoded_openid_request->trust_root just this time");
+	            $this->storage->trustLog($account, $openid_request->trust_root, false);
+	            $this->log->info("User $account trusts $openid_request->trust_root just this time");
 	            $trusted = true;
 	        } else {
-	            $this->storage->trustLog($this->account, $this->decoded_openid_request->trust_root, false);
-	            $this->log->info("User $this->account doesn't trust $this->decoded_openid_request->trust_root");
+	            $this->storage->trustLog($account, $openid_request->trust_root, false);
+	            $this->log->info("User $account doesn't trust $openid_request->trust_root");
 	        }
 	
 	        if ($trusted) {
@@ -69,27 +77,28 @@ class Trust extends CheckId
 	            if (array_key_exists('sreg', $request)) {
 	                $allowed_fields = array_keys($request['sreg']);
 	            }
-	            $response = $this->decoded_openid_request->answer(true);
 
+	            $response = $openid_request->answer(true);
 				// TODO: Fix Sreg implementation
 	            // $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
 	            
 	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
-	            $sites = $this->storage->getRelatedSites($this->decoded_openid_request->trust_root);
-			    $this->template->assign('trust_root', $this->decoded_openid_request->trust_root);
-		    	$this->template->assign('identity', $this->decoded_openid_request->identity);
+	            $sites = $this->storage->getRelatedSites($openid_request->trust_root);
+			    $this->template->assign('trust_root', $openid_request->trust_root);
+		    	$this->template->assign('identity', $openid_request->identity);
 	            $this->template->assign('related_sites', $sites);
 	            $this->template->assign('action', 'redirect');
 	            $this->template->assign('redirect_html', $this->controller->getServerURL() . '?action=redirect');
 	            	            
 			    $this->template->display('redirect.tpl');
 	            $_SESSION['php_openidserver_response'] = $response;
+	            $this->controller->clearOpenIDRequestInfo();
 	            return true;
 	            
 	        } else {
 	            $response = $decoded_openid_request->answer(false);
-	            $this->controller->clear();
+	            $this->controller->clearOpenIDRequestInfo();
 	        	$this->controller->handleResponse($response);
 	        	
 	        	// The Controller->handleResponse shouldn't return. If it has,
@@ -135,8 +144,8 @@ class Trust extends CheckId
 	    }
 		*/
 		
-	    $this->template->assign('trust_root', $this->decoded_openid_request->trust_root);
-	    $this->template->assign('identity', $this->decoded_openid_request->identity);
+	    $this->template->assign('trust_root', $openid_request->trust_root);
+	    $this->template->assign('identity', $openid_request->identity);
 	    $this->template->display('trust.tpl');
 	    
 	    return true;

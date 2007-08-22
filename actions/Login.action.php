@@ -54,7 +54,6 @@ class Login extends Action
 		            	$this->controller->restoreRequestInfo();
 	                	$this->controller->processRequest();
 	            	} else {
-		            	$this->controller->clearRequestInfo();
                     	$this->controller->forward($method, $request, 'index'); 
 	            	}
 	            } else {

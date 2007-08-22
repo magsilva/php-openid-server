@@ -21,6 +21,7 @@ define('PHP_SERVER_PATH', dirname(__FILE__) . '/');
 set_include_path(get_include_path() . PATH_SEPARATOR . '.');
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/libs/');
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/libs/openid/');
 
 
 require_once('common.php');
