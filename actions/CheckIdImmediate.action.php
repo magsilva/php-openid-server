@@ -43,7 +43,7 @@ class CheckIdImmediate extends CheckId
 		}
 
 		// User is authenticated but OpenID doesn't accept it (I don't know how, but...)
-		if ($this->account != null && $this->account != $this->storage->getAccountForUrl($this->decoded_openid_request->identity)) {
+		if ($this->account != null && $this->account != $this->expected_account) {
 	    	$this->log->info("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)");
 	     	$this->server->clearAccount();
 			$response =& $this->decoded_openid_request->answer(false, $this->controller->getServerURL());

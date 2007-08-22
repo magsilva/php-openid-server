@@ -46,11 +46,8 @@ class Admin extends Action
 	            }
 	        } else {
 	            // Good.
-	            if (($username != ADMIN_USERNAME) &&
-	                $this->auth->newAccount($username, $pass1, $request)) {
+	            if ($username != ADMIN_USERNAME && $this->auth->newAccount($username, $pass1, $request)) {
 	                // Add an identity URL to storage.
-	                $this->storage->addIdentifier($username,
-	                                        $this->server->getAccountIdentifier($username));
 	                $this->server->addMessage('Account created.');
 	                $this->controller->redirect('admin');
 	            } else {

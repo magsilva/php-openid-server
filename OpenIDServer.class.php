@@ -132,9 +132,21 @@ class OpenIDServer
 	}
 	
 	
+	function getAccountForUrl($identifier)
+	{
+		// Remove malformed identifiers (escape any strange char)
+	
+		if (! defined('IDENTIFIER_PATTERN') || empty(IDENTIFIER_PATTERN)) {
+			$pattern = sprintf('/^%s?action=identityPage&user=(.*)/', $this->domain);
+		} else {
+			$pattern = IDENTIFIER_PATTERN;
+		}
+		$account = preg_match($pattern, '', $identifier, 1);
+		
+	}
+	
 	function getAccountIdentifier($account)
 	{
-
 		$identifier = sprintf('%s?action=identityPage&user=%s', $this->domain, $account);
 		return $identifier;
 	}
@@ -201,7 +213,7 @@ class OpenIDServer
 	
 	function addSregData($account, &$response, $request_info, $allowed_fields = null)
 	{
-	    $profile = $this->storage_backend->getPersona($account);
+	    // TODO: $profile = $this->storage_backend->getPersona($account);
 	
 	    list($r, $sreg) = $request_info;
 	    list($optional, $required, $policy_url) = $sreg;

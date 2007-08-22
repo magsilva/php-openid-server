@@ -34,7 +34,7 @@ class Trust extends Action
 		$openid_request = $this->controller->getOpenIDRequestInfo();
         $account = $this->server->getAccount();
         $openid_identity = $openid_request->identity;
-        $expected_account = $this->storage->getAccountForUrl($openid_identity);
+        $expected_account = $this->server->getAccountForUrl($openid_identity);
 	
 		if (! $openid_request) {
 			trigger_error('Invalid OpenID trust request');
@@ -59,15 +59,14 @@ class Trust extends Action
 	    	
 	        $trusted = false;
 	        if ($trust_forever) {
-	            $this->storage->trustLog($account, $openid_request->trust_root, true);
+	            $this->storage->trust($account, $openid_request->trust_root);
 	            $this->log->info("User $account trusts $openid_request->trust_root forever");
 	            $trusted = true;
 	        } else if ($trust_once) {
-	            $this->storage->trustLog($account, $openid_request->trust_root, false);
 	            $this->log->info("User $account trusts $openid_request->trust_root just this time");
 	            $trusted = true;
 	        } else {
-	            $this->storage->trustLog($account, $openid_request->trust_root, false);
+	            $this->storage->distrust($account, $openid_request->trust_root);
 	            $this->log->info("User $account doesn't trust $openid_request->trust_root");
 	        }
 	
@@ -111,7 +110,7 @@ class Trust extends Action
 	    if ($sreg != FALSE) {
 	        // Get the profile data and mark it up so it's easy to tell
 	        // what's required and what's optional.
-	        $profile = $this->storage->getPersona($account);
+	        // TODO: $profile = $this->storage->getPersona($account);
 	
 	        list($optional, $required, $policy_url) = $sreg;
 	

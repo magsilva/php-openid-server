@@ -45,7 +45,7 @@ class CheckId extends Action
 
         $this->account = $this->server->getAccount();
         $this->openid_identity = $this->decoded_openid_request->identity;
-        $this->expected_account = $this->storage->getAccountForUrl($this->openid_identity);
+        $this->expected_account = $this->server->getAccountForUrl($this->openid_identity);
 	}
 }
 

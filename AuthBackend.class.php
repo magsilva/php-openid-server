@@ -154,6 +154,50 @@ class AuthBackend_MYSQL extends Backend_MYSQL
             return $result;
         }
     }
+    
+    /*
+    function savePersona($account, $profile_data)
+    {
+        global $sreg_fields;
+
+        $profile = array();
+        foreach ($sreg_fields as $field) {
+            $profile[$field] = '';
+            if (array_key_exists($field, $profile_data)) {
+                $profile[$field] = $profile_data[$field];
+            }
+        }
+
+        // Update the persona record.
+        $field_bits = array();
+        $values = array();
+        foreach ($profile_data as $k => $v) {
+            $field_bits[] = "$k = ?";
+            $values[] = $v;
+        }
+
+		$values[] = $account;
+        $result = $this->db->query(
+			'UPDATE account SET '. implode(', ', $field_bits). ' WHERE username = ?',
+			$values);
+    }
+
+    function getPersona($account)
+    {
+        global $sreg_fields;
+
+        $result = $this->db->getRow(
+			'SELECT ' . implode(', ', $sreg_fields). ' FROM account WHERE username = ?',
+			array($account));
+
+        if (PEAR::isError($result)) {
+            return null;
+        }
+
+        return $result;
+    }
+    */
+    
 }
 
 /**

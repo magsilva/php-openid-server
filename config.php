@@ -55,6 +55,9 @@ define('ALLOW_PUBLIC_REGISTRATION', true);
 define('ADMIN_USERNAME', 'admin');
 define('ADMIN_PASSWORD_MD5', '456b7016a916a4b178dd72b947c152b7');
 
+
+define('IDENTIFIER_PATTERN', '');
+
 /**
  * Storage backend to use.  Currently the only choice is "MYSQL".  See
  * storage.php for storage backend implementations.  Parameters for

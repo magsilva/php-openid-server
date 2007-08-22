@@ -61,8 +61,8 @@ class Account extends Action
 	            $profile[$field] = $profile_form[$field];
 	        }
 	
-	        // Save profile.
-	        $this->storage->savePersona($account, $profile);
+	        // TODO: Save profile.
+	        // $this->storage->savePersona($account, $profile);
 	
 	        // Add a message to the session so it'll get displayed after
 	        // the redirect.
@@ -72,7 +72,7 @@ class Account extends Action
 	        $this->controller->redirect('account');
 	    }
 	
-	    $profile = $this->storage->getPersona($account);
+	    // TODO: $profile = $this->storage->getPersona($account);
 	
 	    if ($profile['dob'] === null) {
 	        $profile['dob'] = '0000-00-00';
