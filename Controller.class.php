@@ -31,6 +31,8 @@ class Controller
 	
 	var $log;
 	
+	var $error_backlog;
+	
 	function Controller()
 	{
 		$this->log = &Logging::instance();
@@ -43,6 +45,11 @@ class Controller
 				// $this->redirect('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
 			}
 		}
+		
+		$this->error_backlog = array();
+		
+		$this->log->debug('Taking over the PHP error handler');
+		set_error_handler(array($this, 'handleError'));
 	}
 	
 	function setServer($server)
@@ -55,6 +62,11 @@ class Controller
 	function setTemplateEngine($template_engine)
 	{
 		$this->template_engine = $template_engine;
+		if (! empty($this->error_backlog)) {
+			foreach ($this->error_backlog as $errstr) { 
+				$this->template_engine->addError($errstr);
+			}
+		}
 	}
 
 	function saveOpenIDRequestInfo($request)
@@ -248,28 +260,40 @@ class Controller
 			case E_STRICT:
 				break;
 			case E_NOTICE:
-				$this->log->warning('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->notice('System notice (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+			case E_WARNING:
+				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				break;
 			case E_ERROR:
-			case E_WARNING:
 			case E_PARSE:
 			case E_CORE_ERROR:
 			case E_CORE_WARNING:
 			case E_COMPILE_ERROR:
 			case E_COMPILE_WARNING:
-				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->err('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				exit();
 				break;
 		
 			case E_USER_ERROR:
 				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
-			    $this->template_engine->addError($errstr);
+				if ($this->template_engine != null) {
+			    	  $this->template_engine->addError($errstr);
+				} else {
+					$this->error_backlog[] = $errstr;
+				}
 				break;	
 			
-			case E_USER_WARNING:
 			case E_USER_NOTICE:
 				$this->log->notice('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
-				$this->template_engine->addError($errstr);
+				break;
+				
+			case E_USER_WARNING:
+				$this->log->warn('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				if ($this->template_engine != null) {
+					$this->template_engine->addError($errstr);
+				} else {
+					$this->error_backlog[] = $errstr;
+				}
 				break;
 			
 			default:
@@ -335,6 +359,9 @@ class Controller
 	function processRequest()
 	{
 		$this->log->debug('Request being processed: ' . $_SERVER['REQUEST_URI']);
+		$this->log->debug(var_export($_REQUEST, true));
+		$this->log->debug(var_export($_POST, true));
+		$this->log->debug(var_export($_GET, true));
 		
 		$this->template_engine->assign('account', $this->server->getAccount());
         $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));
@@ -361,6 +388,9 @@ class Controller
 			switch ($_REQUEST['openid_mode']) {
 				case 'associate':
 					$action = 'associate';
+					break;
+				case 'check_authentication':
+					$action = 'checkAuthentication';
 					break;
 				case 'checkid_setup':
 					$action = 'checkIdSetup';

@@ -63,7 +63,7 @@ class Trust extends Action
 	            $this->log->info("User $account trusts $openid_request->trust_root forever");
 	            $trusted = true;
 	        } else if ($trust_once) {
-	            $this->log->info("User $account trusts $openid_request->trust_root just this time");
+	            $this->log->info("User $account trusts $openid_request->trust_root just for this time");
 	            $trusted = true;
 	        } else {
 	            $this->storage->distrust($account, $openid_request->trust_root);
@@ -84,6 +84,12 @@ class Trust extends Action
 	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
 	            $sites = $this->storage->getRelatedSites($openid_request->trust_root);
+	            if (empty($sites)) {
+		            $this->controller->clearOpenIDRequestInfo();
+	            	$this->controller->handleResponse($response);
+	            	return false;
+	            }
+	            
 			    $this->template->assign('trust_root', $openid_request->trust_root);
 		    	$this->template->assign('identity', $openid_request->identity);
 	            $this->template->assign('related_sites', $sites);
@@ -96,7 +102,7 @@ class Trust extends Action
 	            return true;
 	            
 	        } else {
-	            $response = $decoded_openid_request->answer(false);
+	            $response = $openid_request->answer(false);
 	            $this->controller->clearOpenIDRequestInfo();
 	        	$this->controller->handleResponse($response);
 	        	

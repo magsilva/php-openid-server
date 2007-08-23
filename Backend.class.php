@@ -73,18 +73,27 @@ class Backend_MYSQL extends Backend
         $parameters['phptype'] = 'mysql';
         $this->db =& DB::connect($parameters);
 
-        if (! PEAR::isError($this->db)) {
-            $this->db->setFetchMode(DB_FETCHMODE_ASSOC);
-            $this->db->autoCommit(true);
-            if (! PEAR::isError($this->db)) {
-            	if (CREATE_DATABASE) {
-            		$this->_init();
-            	}
-            	return true;
-            }
+        if (PEAR::isError($this->db)) {
+        	trigger_error($this->db, E_USER_ERROR);
+        	return false;
         }
         
-        return false;
+        $this->db->setFetchMode(DB_FETCHMODE_ASSOC);
+        $this->db->autoCommit(true);
+        if (PEAR::isError($this->db)) {
+        	trigger_error($this->db, E_USER_ERROR);
+        	return false;
+        }
+
+       	if (CREATE_DATABASE) {
+       		$result = $this->_init();
+       		if (PEAR::isError($result)) {
+        		trigger_error($this->db, E_USER_ERROR);
+        		return false;
+       		}
+        }
+        
+        return true;
     }
 }
 
@@ -150,11 +159,21 @@ class Backend_LDAP extends Backend
 		}
 
 		$this->conn = ldap_connect($this->server_name);
-		ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
-    	ldap_set_option($this->conn, LDAP_OPT_DEREF, LDAP_DEREF_ALWAYS);
-    	@ldap_start_tls($this->conn);
-    	$result = ldap_bind($this->conn, $this->bind_username,
-    		$this->bind_password);
+		if (ldap_errno($this->conn) !== 0 | $this->conn === FALSE) {
+			trigger_error(ldap_error($this->conn), E_USER_ERROR);
+		}
+		
+		$result = ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
+		if ($result === FALSE) {
+			trigger_error(ldap_error($this->conn), E_USER_ERROR);
+		}
+    	$result = ldap_set_option($this->conn, LDAP_OPT_DEREF, LDAP_DEREF_ALWAYS);
+    	if ($result === FALSE) {
+			trigger_error(ldap_error($this->conn), E_USER_ERROR);
+		}
+    	
+    	// @ldap_start_tls($this->conn);
+    	$result = ldap_bind($this->conn, $this->bind_username, $this->bind_password);
     	if ($result == FALSE) {
     		return false;
     	}
@@ -162,10 +181,10 @@ class Backend_LDAP extends Backend
 		if ($this->bind_username == $admin_username) {
 			$this->priv_conn =& $this->conn;
 		} else {
-			$this->priv_conn = ldap_connect($this->server_name);
+			$this->priv_conn = ldap_connect('ldap://' .$this->server_name, 389);
 			ldap_set_option($this->priv_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
 	    	ldap_set_option($this->priv_conn, LDAP_OPT_DEREF, LDAP_DEREF_ALWAYS);
-	    	@ldap_start_tls($this->priv_conn);
+	    	// @ldap_start_tls($this->priv_conn);
 	    	$result = ldap_bind($this->priv_conn, $admin_username, $admin_password);
 	    	if ($result == FALSE) {
 	    		return false;

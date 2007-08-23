@@ -35,22 +35,6 @@ class Storage_MYSQL extends Backend_MYSQL
 {
     function _init()
     {
-        $sreg = array('nickname VARCHAR(255)',
-                                 'email VARCHAR(255)',
-                                 'fullname VARCHAR(255)',
-                                 'dob DATE',
-                                 'gender CHAR(1)',
-                                 'postcode VARCHAR(255)',
-                                 'country VARCHAR(32)',
-                                 'language VARCHAR(32)',
-                                 'timezone VARCHAR(255)');
-
-        $account= 'CREATE TABLE account (' .
-        				'username VARCHAR(255) NOT NULL PRIMARY KEY, ' .
-        				'password VARCHAR(255) NOT NULL PRIMARY KEY, ' .
-		        		implode(', ', $sreg) .
-		        		')';
-
 		$trust_relationship = 'CREATE TABLE trust_relationship (' .
 						'account_username VARCHAR(255) NOT NULL, '.
                         'site_root VARCHAR(512) NOT NULL, ' .
@@ -68,12 +52,11 @@ class Storage_MYSQL extends Backend_MYSQL
         $domain = 'CREATE TABLE domain (' .
         				'name VARCHAR(255) NOT NULL, ' .
         				'site_root VARCHAR(512) NOT NULL, ' .
-        				'PRIMARY KEY (domain, site_root)' .
+        				'PRIMARY KEY (name, site_root)' .
         				')';
 
         // Create tables for OpenID storage backend.
         $tables = array(
-                      'account' => $account,
                       'trust_relationship' => $trust_relationship,
                       'site' => $site,
                       'domain' => $domain);
@@ -81,7 +64,16 @@ class Storage_MYSQL extends Backend_MYSQL
 		$this->log->debug('Creating tables \'' . implode('\', \'', array_keys($tables)) . '\'');
         foreach ($tables as $key => $value) {
             $result = $this->db->query($value);
-            $this->log->info("Created table '$key'");
+        	if (PEAR::isError($result)) {
+        		if ($result->message === 'DB Error: already exists') {
+	            	trigger_error($result->message, E_USER_NOTICE);
+        		} else {
+            		trigger_error($result->message, E_USER_ERROR);
+            		return $result;
+        		}
+        	} else {
+            	$this->log->info("Created table '$key'");
+        	}
         }
     }
 
@@ -92,8 +84,12 @@ class Storage_MYSQL extends Backend_MYSQL
 			array($site_root));
 			
         $domains = array();
+		if (PEAR::isError($result)) {
+            trigger_error($result->message, E_USER_ERROR);
+        }
+		
    		foreach ($result as $domain) {
-           	$domains[] = $domain['domain'];
+           	$domains[] = $domain['name'];
 		}
 		return $domains;
     }
@@ -107,27 +103,46 @@ class Storage_MYSQL extends Backend_MYSQL
 			$result = $this->db->getAll(
 				'SELECT DISTINCT site_root, sso_method, sso_arguments FROM domain, site WHERE domain.site_root = site.root AND domain = ?',
 				array($domain));
+			
+			if (PEAR::isError($result)) {
+	            trigger_error($result->message, E_USER_ERROR);
+        	}
 				
 			foreach ($result as $site) {
 				$sites[$domain][$site['trust_root']] = array();
 				$sites[$domain][$site['trust_root']]['method'] = $site['sso_method'];
 				$sites[$domain][$site['trust_root']]['arguments'] = $site['sso_arguments'];
 			}
-		}	
+			
+			if (empty($sites[$domain])) {
+				unset($sites[$domain]);
+			}
+		}
 		return $sites;	
 	}
 
 	function __trustLog($account, $site_root, $trusted)
 	{
-       	$this->db->query(
+		$this->log->info("Changing the trust of '$site_root', for user '$account', to '$trusted'");
+
+       	$result = $this->db->query(
 				'INSERT INTO trust_relationship (account_username, site_root, trusted) VALUES (?, ?, ?)',
             	array($account, $site_root, $trusted));
-	
+
+		if (! PEAR::isError($result)) {
+            return true;
+       	}
+
 		$this->db->query(
 				'UPDATE trust_relationship SET trusted = ? WHERE account_username = ? AND site_root = ?',
         		array($trusted, $account, $site_root));
-        		
-		$this->log->info("Changed the trust of '$site_root', for user '$account', to '$trusted'");
+
+		if (! PEAR::isError($result)) {
+            return true;
+       	}
+       	
+		trigger_error($result->message, E_USER_ERROR);
+		return false;
 	}
 	
     function trust($account, $site_root)
@@ -159,31 +174,50 @@ class Storage_MYSQL extends Backend_MYSQL
     function isTrusted($account, $trust_root)
     {
         $result = $this->db->getOne(
-			'SELECT trusted FROM site WHERE account_username = ? AND site_root = ? AND trusted',
+			'SELECT trusted FROM trust_relationship WHERE account_username = ? AND site_root = ? AND trusted',
 			array($account, $trust_root));
 
         if (PEAR::isError($result)) {
-            return false;
-        } else {
-            return $result;
+        	trigger_error($result->message, E_USER_ERROR);
         }
+        
+		if (empty($result)) {
+			return false;
+		} else {
+			return true;
+		}
     }
 
     function getSites($account)
     {
-        return $this->db->getAll(
+        $result = $this->db->getAll(
 			'SELECT site_root, trusted FROM site WHERE account_username = ?',
 			array($account));
+			
+		if (PEAR::isError($result)) {
+            trigger_error($result->message, E_USER_ERROR);
+        }
+		
+		return $result;
     }
 
     function removeAccount($account)
     {
-        $this->db->query(
+        $result = $this->db->query(
 			'DELETE FROM account WHERE username = ?',
 			array($account));
-        $this->db->query(
+		if (PEAR::isError($result)) {
+            trigger_error($result->message, E_USER_ERROR);
+        }
+		
+			
+        $result = $this->db->query(
 			'DELETE FROM trust_relationship WHERE account_username = ?',
 			array($account));
+		if (PEAR::isError($result)) {
+            trigger_error($result->message, E_USER_ERROR);
+        }
+			
     }
 }
 

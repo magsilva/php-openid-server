@@ -1,5 +1,5 @@
 - Usar os dados do LDAP para armazenar os dados do usuário.
-- OpenIDServer->getAccountForUrl()
+- Tirar o sreg do Store.
 
 - Tabela de sites está com dados errados. Melhor revisar essa parte do código.
 - Adicionar função de logout (que apague os cookies de todas as aplicações do

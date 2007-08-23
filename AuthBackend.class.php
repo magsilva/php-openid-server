@@ -62,10 +62,22 @@ class AuthBackend_MYSQL extends Backend_MYSQL
         // Create tables for OpenID storage backend.
         $tables = array();
 
-        $account = 'CREATE TABLE accounts (' .
+        $sreg = array('nickname VARCHAR(255)',
+                                 'email VARCHAR(255)',
+                                 'fullname VARCHAR(255)',
+                                 'dob DATE',
+                                 'gender CHAR(1)',
+                                 'postcode VARCHAR(255)',
+                                 'country VARCHAR(32)',
+                                 'language VARCHAR(32)',
+                                 'timezone VARCHAR(255)');
+
+        $account= 'CREATE TABLE account (' .
         				'username VARCHAR(255) NOT NULL PRIMARY KEY, ' .
-                        'password VARCHAR(255)' .
-					')';
+        				'password VARCHAR(255) NOT NULL, ' .
+		        		implode(', ', $sreg) .
+		        		')';
+
 		$tables[] = $account;
 
         foreach ($tables as $t) {

@@ -135,13 +135,24 @@ class OpenIDServer
 	function getAccountForUrl($identifier)
 	{
 		// Remove malformed identifiers (escape any strange char)
-	
-		if (! defined('IDENTIFIER_PATTERN') || empty(IDENTIFIER_PATTERN)) {
-			$pattern = sprintf('/^%s?action=identityPage&user=(.*)/', $this->domain);
+		if (defined('IDENTIFIER_PATTERN')) {
+			$pattern = IDENTIFIER_PATTERN;	
 		} else {
-			$pattern = IDENTIFIER_PATTERN;
+			$pattern = '';
 		}
-		$account = preg_match($pattern, '', $identifier, 1);
+		
+		if (empty($pattern)) {
+			$pattern = sprintf('%s?action=identityPage&user=', $this->domain);
+			$pattern = preg_quote($pattern, '/');
+			$pattern = '/^' . $pattern . '(.*)/';
+		}
+		
+		$result = preg_match($pattern, $identifier, $matches);
+		
+		if ($result ===  0 || $result === FALSE) {
+			return false;
+		}
+		return $matches[1];
 		
 	}
 	
