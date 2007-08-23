@@ -359,9 +359,6 @@ class Controller
 	function processRequest()
 	{
 		$this->log->debug('Request being processed: ' . $_SERVER['REQUEST_URI']);
-		$this->log->debug(var_export($_REQUEST, true));
-		$this->log->debug(var_export($_POST, true));
-		$this->log->debug(var_export($_GET, true));
 		
 		$this->template_engine->assign('account', $this->server->getAccount());
         $this->template_engine->assign('account_openid_url', $this->server->getAccountIdentifier($this->server->getAccount()));

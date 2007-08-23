@@ -1,3 +1,5 @@
+- Verificar porque o OpenID está utilizando o modo inseguro de conexão (sem
+associação).
 - Usar os dados do LDAP para armazenar os dados do usuário.
 - Tirar o sreg do Store.
 
