@@ -33,19 +33,18 @@ class Logging
 		$handler_options['eol'] = "\n";
 		$handler_options['append'] = true;
 		
-		$trace = debug_backtrace();
 		/*
-		$trace[1]['function']
-		$trace[1]['line']
-		$trace[1]['file']
-		$trace[1]['class']
-		$trace[1]['object']
-		$trace[1]['type']
-		$trace[1]['args']
-		*/
-		 
+		 * PEAR_LOG_EMERG 	emerg() 	System is unusable
+		 * PEAR_LOG_ALERT 	alert() 	Immediate action required
+		 * PEAR_LOG_CRIT 	crit()	 	Critical conditions
+		 * PEAR_LOG_ERR 	err() 		Error conditions
+		 * PEAR_LOG_WARNING warning()	Warning conditions
+		 * PEAR_LOG_NOTICE	notice() 	Normal but significant
+		 * PEAR_LOG_INFO	info()		Informational
+		 * PEAR_LOG_DEBUG	debug()		Debug-level messages
+		 */
 		$error_level = LOG_ERROR_LEVEL;
-		return Log::singleton('file', LOG_FILENAME, 'PHP-OPENID-SERVER');
+		return Log::singleton('file', LOG_FILENAME, 'PHP-OPENID-SERVER', $handler_options, PEAR_LOG_NOTICE);
 	}
 }
 

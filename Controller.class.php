@@ -49,6 +49,8 @@ class Controller
 		$this->error_backlog = array();
 		
 		$this->log->debug('Taking over the PHP error handler');
+		error_reporting(E_ALL);
+		ini_set('html_errors', false);  
 		set_error_handler(array($this, 'handleError'));
 	}
 	
@@ -235,6 +237,16 @@ class Controller
 	
 	function handleError($errno, $errstr, $errfile, $errline)
 	{
+		/*
+		$trace[1]['function']
+		$trace[1]['line']
+		$trace[1]['file']
+		$trace[1]['class']
+		$trace[1]['object']
+		$trace[1]['type']
+		$trace[1]['args']
+		*/
+		
 		// define an assoc array of error string
 	    // in reality the only entries we should
 	    // consider are E_WARNING, E_NOTICE, E_USER_ERROR,
@@ -257,12 +269,13 @@ class Controller
 			case E_STRICT:
 				break;
 			case E_NOTICE:
-				if (strpos($this->template_engine->template_dir, $errfile) == 0) {
+				if ($this->template_engine !== null && strpos($this->template_engine->template_dir, $errfile) == 0) {
 					break;
 				}
 				$this->log->notice('System notice (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				break;
 			case E_WARNING:
-				if (strpos($this->template_engine->template_dir, $errfile) == 0) {
+				if ($this->template_engine !== null && strpos($this->template_engine->template_dir, $errfile) == 0) {
 					break;
 				}
 				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
