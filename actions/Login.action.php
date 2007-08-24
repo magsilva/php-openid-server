@@ -24,7 +24,7 @@ class Login extends Action
 	function process($method, &$request)
 	{
 		if ($this->server->getAccount() != null) {
-			$this->log->err('Trying to login when already is authenticated.');
+			trigger_error('Trying to login when already is authenticated.', E_ERROR_NOTICE);
 		}
 		
 		// Do the authentication.
@@ -35,21 +35,21 @@ class Login extends Action
 	        $u = $request['username'];
 	        $p = $request['passwd'];
 	        
-	        if ($u && $p) {
+	        if (! empty($u)) {
 	        	// Special case: admin authentication
 	        	if ($u == ADMIN_USERNAME) {
 	    			if (md5($p) == ADMIN_PASSWORD_MD5) {
-		                // Log in as admin.
+			            $this->log->debug('Admin user has been authenticated');
 		                $this->server->setAccount($u, true);                
                     	$this->controller->forward($method, $request, 'index');
 	    			} else {
-	    				trigger_error('Incorrect authentication information.');
+	    				trigger_error('Incorrect authentication information.', E_USER_WARNING);
 	    			}
 	            }
 	            
 	            if ($this->auth->authenticate($u, $p)) {
 	            	$this->server->setAccount($u);
-		            $this->log->info("User $u has been authenticated");
+		            $this->log->debug("User $u has been authenticated");
 	            	if ($this->controller->hasRequestInfo()) {
 		            	$this->controller->restoreRequestInfo();
 	                	$this->controller->processRequest();
@@ -57,10 +57,11 @@ class Login extends Action
                     	$this->controller->forward($method, $request, 'index'); 
 	            	}
 	            } else {
-	                trigger_error('The confirmation request was rejected, or timed out.');
+	                trigger_error('The authentication has failed due to incorrect username or password. ' .
+	                		'Please try again.', E_USER_WARNING);
 	            }
 			} else {
-				trigger_error('Please fill in all the available fields.');
+				trigger_error('Please, fill in all the available fields.');
 			}
 	    }
 		

@@ -1,3 +1,7 @@
+- Arrumar a página de administração.
+- Arrumar a página de configuração de sites confiáveis.
+- Arrumar a página de criação de usuário.
+- Criar a página de configuração de domínios de confiança.
 - Rever os trigger_error(E_USER_). Erros fatais (que impedem o funcionamento do sistema) são E_USER_ERROR,
 erros do usuário (entrada de dados) são E_USER_WARNING e erros do sistema (mas devidamente tratados pela
 aplicação, apesar de serem indicativos de erros mais graves do sistema ou do usuário) são E_USER_NOTICE.

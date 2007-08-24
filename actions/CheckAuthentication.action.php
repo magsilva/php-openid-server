@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once('CheckId.class.php');
+require_once('OpenID_BaseAction.class.php');
 
 /**
  * Ask an identity provider if an end user owns the claimed identifier, but be
@@ -27,29 +27,17 @@ require_once('CheckId.class.php');
  * HTTP method: GET
  * Flow: Consumer -> User agent -> IdP -> User agent -> Consumer
  */
-class CheckAuthentication extends Action
+class CheckAuthentication extends OpenID_BaseAction
 {
-	var $decoded_openid_request;
-	
 	function process($method, &$request)
 	{
-	    $decoded_openid_request = $this->openid_server->decodeRequest();
+	    parent::process($method, $request);
 
-	    if (! $decoded_openid_request) {
-	        trigger_error('Invalid OpenID request: ' . $decoded_openid_request->text);
-	        return false;
-	    }
-
-	    if (is_a($decoded_openid_request, 'Auth_OpenID_ServerError')) {
-	        trigger_error('Invalid OpenID request: ' . $decoded_openid_request->text);
-	        $this->controller->handleResponse($decoded_openid_request);
-	    }
-
-		$response = $this->openid_server->openid_check_authentication($decoded_openid_request);
+		$response = $this->openid_server->openid_check_authentication($this->openid_request);
 		$this->controller->handleResponse($response);
 
 		// The $controller->handleResponse() shouldn't return.
-		return false;
+		assert(FALSE);
 	}
 }
 

@@ -24,15 +24,16 @@ class Redirect extends Action
 {
 	function process($method, &$request)
 	{
-		$response = $_SESSION['php_openidserver_response'];
-		if (isset($response) && ! empty($response)) {
-		    // $this->controller->clearRequestInfo();
-		    $this->controller->handleResponse($response);
+		if (! array_key_exists('php_openidserver_response', $_SESSION) && ! empty($_SESSION['php_openidserver_response'])) {
+			trigger_error('Invalid redirect request', E_USER_NOTICE);
+		    $this->controller->forward($method, $request, 'index');
 		}
+
+		$response = $_SESSION['php_openidserver_response'];
+	    $this->controller->handleResponse($response);
 		
-		// The Controller->handleResponse shouldn't return. If it has,
-		// something wrong has gone wrong.
-	    return false;   
+		// The Controller->handleResponse shouldn't return.
+		assert(FALSE);
 	}
 }
 

@@ -17,12 +17,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once('Action.class.php');
+require_once('OpenID_BaseAction.class.php');
 
-class CheckId extends Action
+class CheckId extends OpenID_BaseAction
 {
-	var $decoded_openid_request;
-	
 	var $account;
 	
 	var $openid_identity;
@@ -31,20 +29,10 @@ class CheckId extends Action
 	
 	function process($method, &$request)
 	{
-	    $this->decoded_openid_request = $this->openid_server->decodeRequest();
-
-	    if (! $this->decoded_openid_request) {
-	        trigger_error('Invalid OpenID request: ' . $this->decoded_openid_request->text);
-	        return false;
-	    }
-
-	    if (is_a($this->decoded_openid_request, 'Auth_OpenID_ServerError')) {
-	        trigger_error('Invalid OpenID request: ' . $this->decoded_openid_request->text);
-	        $this->controller->handleResponse($this->decoded_openid_request);
-	    }
+	    parent::process($method, $request);
 
         $this->account = $this->server->getAccount();
-        $this->openid_identity = $this->decoded_openid_request->identity;
+        $this->openid_identity = $this->openid_request->identity;
         $this->expected_account = $this->server->getAccountForUrl($this->openid_identity);
 	}
 }

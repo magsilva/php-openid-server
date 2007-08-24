@@ -18,7 +18,7 @@ Copyright (C) 2005 JanRain, Inc.
 */
 
 require_once('Action.class.php');
-require_once('common.php');
+require_once('common/HTTP.class.php');
 
 class IdentityPage extends Action
 {	
@@ -30,9 +30,10 @@ class IdentityPage extends Action
 	    // otherwise, display the identity page with an XRDS location
 	    // header.
 	    // TODO: Replace with a generic function (like the one from CoTeia)
-	    $headers = get_http_request_headers();
+	    $headers = HTTPUtil::getRequestHeaders();
 	    foreach ($headers as $header => $value) {
-	        if ($header == 'Accept' && preg_match('/application\/xrds\+xml/', $value)) {
+	    	$pattern = preg_quote('application/xrds+xml', '/');
+	        if ($header == 'Accept' && preg_match('/' . $pattern . '/', $value)) {
 	            $serve_xrds_now = true;
 	            break;
 	        }
@@ -41,12 +42,16 @@ class IdentityPage extends Action
 	    if ($serve_xrds_now) {
 	        $request['xrds'] = $request['user'];
 	        $this->controller->forward($method, $request, 'XRDS');
+	        
+	        // Should return from the forward.
+	        assert(FALSE);
 	    } else {
 	        header('X-XRDS-Location: ' . $this->controller->getServerURL() . '?action=XRDS&user=' . $request['user']);
 	        $this->template->assign('openid_url', $this->server->getAccountIdentifier($request['user']));
 	        $this->template->assign('user', $request['user']);
 	        $this->template->display('idpage.tpl', true);
 	    }
+	    
 	    return true;
 	}
 }

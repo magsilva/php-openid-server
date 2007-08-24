@@ -17,6 +17,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
+require_once('common/Debug.class.php');
+
+
 class Controller
 {
 	var $template_engine;
@@ -52,6 +55,13 @@ class Controller
 		error_reporting(E_ALL);
 		ini_set('html_errors', false);  
 		set_error_handler(array($this, 'handleError'));
+		
+		// Active assert and make it quiet
+		assert_options(ASSERT_ACTIVE, 1);
+		assert_options(ASSERT_WARNING, 0);
+		assert_options(ASSERT_BAIL, 0);
+		assert_options(ASSERT_QUIET_EVAL, 1);
+		assert_options(ASSERT_CALLBACK, array($this, 'handleAssertion'));
 	}
 	
 	function setServer($server)
@@ -233,6 +243,15 @@ class Controller
 		}
 		$this->server->clearMessages();
 	}
+
+	function handleAssertion($file, $line, $message)
+	{
+		$this->log->notice('Failed assertion in ' . $file . ':' . $line . ' - ' . $message);
+    	
+    	/* Don't execute PHP internal assertion handler */
+    	return true;
+	}
+
 	
 	
 	function handleError($errno, $errstr, $errfile, $errline)
@@ -272,7 +291,8 @@ class Controller
 				if ($this->template_engine !== null && strpos($this->template_engine->template_dir, $errfile) == 0) {
 					break;
 				}
-				$this->log->notice('System notice (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->notice('System notice (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
+				 $errstr . "\nTrace:\n" . DebugUtil::exportTrace());
 				break;
 			case E_WARNING:
 				if ($this->template_engine !== null && strpos($this->template_engine->template_dir, $errfile) == 0) {

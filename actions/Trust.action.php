@@ -17,12 +17,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
-require_once('Action.class.php');
+require_once('OpenID_BaseAction.class.php');
 
 /**
  * Set the trust level for a site and it's related domains.
  */
-class Trust extends Action
+class Trust extends OpenID_BaseAction
 {
 	function requireAuth()
 	{
@@ -31,16 +31,9 @@ class Trust extends Action
 	
 	function process($method, &$request)
 	{
-		$openid_request = $this->controller->getOpenIDRequestInfo();
-        $account = $this->server->getAccount();
-        $openid_identity = $openid_request->identity;
-        $expected_account = $this->server->getAccountForUrl($openid_identity);
-	
-		if (! $openid_request) {
-			trigger_error('Invalid OpenID trust request');
-			return false;
-		}
-	  
+		$this->openid_request = $this->controller->getOpenIDRequestInfo();
+		parent::process($method, $request);
+        
 		// It will be post if it's an CheckId_Setup and GET if CheckId_Immediate?	
 	    if ($method == 'POST' && (isset($request['trust_forever']) || $request['trust_once'])) {
 	    	$trust_forever = isset($request['trust_forever']);
@@ -48,31 +41,34 @@ class Trust extends Action
 	    	
 	        $trusted = false;
 	        if ($trust_forever) {
-	            $this->storage->trust($account, $openid_request->trust_root);
-	            $this->log->info("User $account trusts $openid_request->trust_root forever");
+	            $this->storage->trust($this->account, $this->openid_request->trust_root);
+	            $this->log->debug("User $this->account trusts $this->openid_request->trust_root forever");
 	            $trusted = true;
 	        } else if ($trust_once) {
-	            $this->log->info("User $account trusts $openid_request->trust_root just for this time");
+	            $this->log->debug("User $this->account trusts $this->openid_request->trust_root just for this time");
 	            $trusted = true;
 	        } else {
-	            $this->storage->distrust($account, $openid_request->trust_root);
-	            $this->log->info("User $account doesn't trust $openid_request->trust_root");
+	            $this->storage->distrust($this->account, $this->openid_request->trust_root);
+	            $this->log->debug("User $this->account doesn't trust $this->openid_request->trust_root");
 	        }
 	
 	        if ($trusted) {
-	            $response = $openid_request->answer(true);
+	            $response = $this->openid_request->answer(true);
 
 	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
-	            $sites = $this->storage->getRelatedSites($openid_request->trust_root);
+	            $sites = $this->storage->getRelatedSites($this->openid_request->trust_root);
 	            if (empty($sites)) {
+	            	$this->log->debug("Site '$this->openid_request->trust_root' doesn't belong to a domain, so no need to propagate the trust");
 		            $this->controller->clearOpenIDRequestInfo();
 	            	$this->controller->handleResponse($response);
-	            	return false;
+	            	
+	            	// Shouldn't return.
+	            	assert(FALSE);
 	            }
 	            
-			    $this->template->assign('trust_root', $openid_request->trust_root);
-		    	$this->template->assign('identity', $openid_request->identity);
+			    $this->template->assign('trust_root', $this->openid_request->trust_root);
+		    	$this->template->assign('identity', $this->openid_request->identity);
 	            $this->template->assign('related_sites', $sites);
 	            $this->template->assign('action', 'redirect');
 	            $this->template->assign('redirect_html', $this->controller->getServerURL() . '?action=redirect');
@@ -80,21 +76,21 @@ class Trust extends Action
 			    $this->template->display('redirect.tpl');
 	            $_SESSION['php_openidserver_response'] = $response;
 	            $this->controller->clearOpenIDRequestInfo();
+
+            	$this->log->debug("Site '$this->openid_request->trust_root' belongs to a domain, so we need to propagate the trust");
 	            return true;
-	            
 	        } else {
-	            $response = $openid_request->answer(false);
+	            $response = $this->openid_request->answer(false);
 	            $this->controller->clearOpenIDRequestInfo();
 	        	$this->controller->handleResponse($response);
 	        	
-	        	// The Controller->handleResponse shouldn't return. If it has,
-	        	// something wrong has gone wrong.
-	        	return false;
+	        	// The Controller->handleResponse shouldn't return.
+	        	assert(FALSE);
 	        }
 	    }
 	
-	    $this->template->assign('trust_root', $openid_request->trust_root);
-	    $this->template->assign('identity', $openid_request->identity);
+	    $this->template->assign('trust_root', $this->openid_request->trust_root);
+	    $this->template->assign('identity', $this->openid_request->identity);
 	    $this->template->display('trust.tpl');
 	    
 	    return true;

@@ -14,25 +14,49 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
-Copyright (C) 2005 JanRain, Inc.
+Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once('Action.class.php');
 
-class Logout extends Action
+class DebugUtil
 {
-	function process($method, &$request)
+	function dumpTrace()
 	{
-		$account = $this->server->getAccount();
-		if ($account == null) {
-			trigger_error('Trying to logout when not authenticated.', E_ERROR_NOTICE);
+		return var_dump(DebugUtil::trace());		
+	}
+
+
+	function exportTrace()
+	{
+		return var_export(DebugUtil::trace(), true);		
+	}
+	
+	function trace()
+	{
+		$trace = array();
+		if (DebugUtil::isHTTP()) {
+			$trace[] = DebugUtil::traceHTTP();
 		}
-	    
-	    $this->log->debug("Logging out user '$account'");
-	    $this->server->clearAccount();
-	    $this->controller->forward($method, $request, 'index');
-	    
-	    return true;
+		
+		return $trace;
+	}
+	
+	function isHTTP()
+	{
+		if (array_key_exists('REQUEST_METHOD', $_SERVER)) {
+			return true;
+		}
+		return false;
+	}
+	
+	function traceHTTP()
+	{
+		$http = array();
+		$http['referer'] = $_SERVER['HTTP_REFERER'];
+		$http['cookie'] = $_SERVER['HTTP_COOKIE'];
+		$http['client_ip'] = $_SERVER['REMOTE_ADDR'];
+		
+		return $http;
 	}
 }
 

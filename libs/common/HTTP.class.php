@@ -14,26 +14,27 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
-Copyright (C) 2005 JanRain, Inc.
+Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once('Action.class.php');
-
-class Logout extends Action
+class HTTPUtil
 {
-	function process($method, &$request)
+	function getRequestHeaders()
 	{
-		$account = $this->server->getAccount();
-		if ($account == null) {
-			trigger_error('Trying to logout when not authenticated.', E_ERROR_NOTICE);
+		$headers = array();
+		if (function_exists('getallheaders') && getallheaders() !== FALSE) {
+			$tmp = getallheaders();
+			foreach ($tmp as $key => $value) {
+				$headers[strtolower($key)] = $value;
+			}
+		} else {
+			foreach($_SERVER as $name => $value) {
+				if (substr($name, 0, 5) == 'HTTP_') {
+					$headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+				}
+			}
 		}
-	    
-	    $this->log->debug("Logging out user '$account'");
-	    $this->server->clearAccount();
-	    $this->controller->forward($method, $request, 'index');
-	    
-	    return true;
+		return $headers;
 	}
 }
-
 ?>

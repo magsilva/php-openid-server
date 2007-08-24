@@ -40,9 +40,7 @@ class Register extends Action
 	            $success = false;
 	        }
 	
-	        $errors = $this->server->accountCheck($request['username'],
-	                                      $request['pass1'],
-	                                      $request['pass2']);
+	        $errors = $this->server->accountCheck($request['username'], $request['pass1'], $request['pass2']);
 	
 	        if ($errors) {
 	            foreach ($errors as $e) {
@@ -50,7 +48,7 @@ class Register extends Action
 	            }
 	        } else {
 	            // Good.
-	            if (($request['username'] != ADMIN_USERNAME) &&
+	            if ($request['username'] != ADMIN_USERNAME &&
 	                $this->auth->newAccount($request['username'], $request['pass1'], $request)) {
 	
 	                // Add an identity URL to storage.

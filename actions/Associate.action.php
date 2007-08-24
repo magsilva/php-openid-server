@@ -17,14 +17,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once('Action.class.php');
+require_once('OpenID_BaseAction.class.php');
 
 /**
  * Establish a shared secret between consumer and identity provider.
  * Flow: consumer -> IdP -> consumer
  * HTTP method: POST
  */
-class Associate extends Action
+class Associate extends OpenID_BaseAction
 {
 	function requireAuth()
 	{
@@ -34,26 +34,17 @@ class Associate extends Action
 	function process($method, &$request)
 	{
 		if (! array_key_exists('openid_session_type', $request) || empty($request['openid_session_type'])) {
-			$this->log->debug('Client using a cleartext session for key exchange.');
+			trigger_error('Client using a cleartext session for key exchange', E_USER_NOTICE);
 		}
 		
-	    $decoded_openid_request = $this->openid_server->decodeRequest();
-	    if (! $decoded_openid_request) {
-	        trigger_error('Invalid OpenID request: ' . $decoded_openid_request['text']);
-	        return false;
-	    }
-
-	    if (is_a($decoded_openid_request, 'Auth_OpenID_ServerError')) {
-	        $this->log->info('Invalid OpenID request ' . $decoded_openid_request['text']);
-	        $this->controller->handleResponse($decoded_openid_request);
-	    }
-
+	    parent::process($method, $request);
+	    
+        $response =& $this->openid_server->handleRequest($this->openid_request);
 		$this->log->debug('Client has been associated');
-        $response =& $this->openid_server->handleRequest($decoded_openid_request);
 		$this->controller->handleResponse($response);
 		
 		// The $controller->handleResponse() shouldn't return.
-		return false;
+		assert(FALSE);
 	}
 }
 

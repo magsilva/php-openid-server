@@ -38,36 +38,30 @@ class CheckIdImmediate extends CheckId
 
 		// User is not authenticated
 		if ($this->account == null) {
-			$this->log->info("Immediate authentication for user '$this->expected_account' ($this->openid_identity) was denied.");
-			$response =& $this->decoded_openid_request->answer(false, $this->controller->getServerURL());
+			$this->log->debug("Immediate authentication for user '$this->expected_account' ($this->openid_identity) was denied.");
+			$response =& $this->openid_request->answer(false, $this->controller->getServerURL());
+		} else {
+			// User is authenticated but OpenID doesn't accept it (I don't know how, but...)
+			if ($this->account != $this->expected_account) {
+		    	trigger_error("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)", E_USER_NOTICE);
+		     	$this->server->clearAccount();
+				$response =& $this->openid_request->answer(false, $this->controller->getServerURL());
+			} else {
+				// User is authenticated.	        
+		     	if ($this->storage->isTrusted($this->account, $openid_request->trust_root)) {
+					$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated and server '$this->openid_request->trust_root' is trusted");
+					$response =& $this->openid_request->answer(true);
+				} else {
+					$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated but server '$this->openid_request->trust_root' isn't trusted");
+					$response =& $this->openid_request->answer(false);
+		        }
+			}
 		}
-
-		// User is authenticated but OpenID doesn't accept it (I don't know how, but...)
-		if ($this->account != null && $this->account != $this->expected_account) {
-	    	$this->log->info("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)");
-	     	$this->server->clearAccount();
-			$response =& $this->decoded_openid_request->answer(false, $this->controller->getServerURL());
-		}
-
-		// User is authenticated.	        
-     	if ($this->account != null) {
-     		if ($this->storage->isTrusted($this->account, $decoded_openid_request->trust_root)) {
-				$this->log->info("User '$this->account' ($this->openid_identity) is authenticated and server '$this->decoded_openid_request->trust_root' is trusted");
-                $response =& $this->decoded_openid_request->answer(true);
-            } else {
-            	// TODO: shouldn't we fail?
-            	$this->log->info("User '$account' ($openid_identity) is authenticated but server '$request->trust_root' isn't trusted");
-                $this->controller->forward($method, $this->decoded_openid_request, 'trust');
-                // The forward shouldn't return if everything is ok.'
-                return false;
-                
-            }
-        }
-
+		
 		$this->controller->handleResponse($response);
 		
 		// The $controller->handleResponse() shouldn't return.
-		return false;
+		assert(FALSE);
 	}
 }
 

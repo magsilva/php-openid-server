@@ -40,25 +40,26 @@ class CheckIdSetup extends CheckId
 	    
 	    // User is authenticated but OpenID doesn't accept it (I don't know how, but...)
 		if ($this->account !== $this->expected_account) {
-	    	$this->log->info("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)");
+	    	$this->log->notice("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)");
 	     	$this->server->clearAccount();
 	     	$this->controller->forward($method, $request, 'serve');
+
 	     	// The forward shouldn't return if everything is ok.
-	     	return false;
+	     	assert(FALSE);
 		}
 
 
 		// User is authenticated.
-  		if ($this->storage->isTrusted($this->account, $this->decoded_openid_request->trust_root)) {
-			$this->log->info("User '$this->account' ($this->openid_identity) is authenticated and server '" . $this->decoded_openid_request->trust_root ."' is trusted");
-			$response =& $this->decoded_openid_request->answer(true);
+  		if ($this->storage->isTrusted($this->account, $this->openid_request->trust_root)) {
+			$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated and server '" . $this->openid_request->trust_root ."' is trusted");
+			$response =& $this->openid_request->answer(true);
 			$this->controller->handleResponse($response);
 
 			// The $controller->handleResponse() shouldn't return.
-			return false;
+			assert(FALSE);
 		} else {
-			$this->log->info("User '$this->account' ($this->openid_identity) is authenticated but server '$this->decoded_openid_request->trust_root' isn't trusted");
-			$this->controller->saveOpenIDRequestInfo($this->decoded_openid_request);
+			$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated but server '$this->openid_request->trust_root' isn't trusted");
+			$this->controller->saveOpenIDRequestInfo($this->openid_request);
 			$this->controller->forward($method, $request, 'trust');
 	
 	     	// The forward shouldn't return if everything is ok.
