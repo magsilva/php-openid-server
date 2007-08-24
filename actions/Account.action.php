@@ -21,37 +21,35 @@ require_once('Action.class.php');
 
 class Account extends Action
 {
+	function requireAuth()
+	{
+		return true;
+	}  
+
 	function process($method, &$request)
 	{
-	    global
-	    	$language_codes,
-	        $country_codes,
-	        $sreg_fields,
-	        $timezone_strings;
-	
-	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin();
-	    }
-	    
+		global $timezone_strings, $country_codes, $language_codes, $sreg_fields;
+
 	    $account = $this->server->getAccount();
-	
+		$profile = $this->auth->getAccountProfile($account);
+
 	    if ($method == 'POST') {
 	        $profile_form = $request['profile'];
 	
 	        // Adjust DOB value.
 	        $dob = $profile_form['dob'];
 	
-	        if (!$dob['Date_Year']) {
+	        if (! $dob['Date_Year']) {
 	            $dob['Date_Year'] = '0000';
 	        }
-	        if (!$dob['Date_Month']) {
+	        if (! $dob['Date_Month']) {
 	            $dob['Date_Month'] = '00';
 	        }
-	        if (!$dob['Date_Day']) {
+	        if (! $dob['Date_Day']) {
 	            $dob['Date_Day'] = '00';
 	        }
 	
-	        $profile_form['dob'] = sprintf("%d-%d-%d",
+	        $profile_form['dob'] = sprintf('%d-%d-%d',
 	                                       $dob['Date_Year'],
 	                                       $dob['Date_Month'],
 	                                       $dob['Date_Day']);
@@ -62,14 +60,14 @@ class Account extends Action
 	        }
 	
 	        // TODO: Save profile.
-	        // $this->storage->savePersona($account, $profile);
+	        $this->auth->setAccountProfile($account, $profile);
 	
 	        // Add a message to the session so it'll get displayed after
 	        // the redirect.
 	        $this->server->addMessage('Changes saved.');
 	
 	        // Redirect to account screen to make reloading easy.
-	        $this->controller->redirect('account');
+	        $this->controller->forward($method, $request, 'index');
 	    }
 	
 	    // TODO: $profile = $this->storage->getPersona($account);

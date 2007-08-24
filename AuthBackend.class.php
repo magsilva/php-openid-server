@@ -1,4 +1,4 @@
-<?php
+ <?php
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,14 @@ class AuthBackend
     }
 
 	function setPassword($username, $password)
+	{
+	}
+
+	function getAccountProfile($account)
+	{
+	}
+	
+	function setAccountProfile($account, $profile)
 	{
 	}
 
@@ -167,49 +175,54 @@ class AuthBackend_MYSQL extends Backend_MYSQL
         }
     }
     
-    /*
-    function savePersona($account, $profile_data)
+    function setAccountProfile($account, $data)
     {
         global $sreg_fields;
 
         $profile = array();
         foreach ($sreg_fields as $field) {
             $profile[$field] = '';
-            if (array_key_exists($field, $profile_data)) {
-                $profile[$field] = $profile_data[$field];
+            if (array_key_exists($field, $data)) {
+                $profile[$field] = $data[$field];
             }
         }
 
         // Update the persona record.
-        $field_bits = array();
+        $fields = array();
         $values = array();
-        foreach ($profile_data as $k => $v) {
-            $field_bits[] = "$k = ?";
+        $values[] = $account;
+        
+        foreach ($profile as $k => $v) {
+            $fields[] = "$k = ?";
             $values[] = $v;
         }
 
-		$values[] = $account;
         $result = $this->db->query(
-			'UPDATE account SET '. implode(', ', $field_bits). ' WHERE username = ?',
+			'UPDATE account SET ' .
+			implode(', ', array_keys($profile)) .
+			' WHERE username = ?',
 			$values);
-    }
 
-    function getPersona($account)
+        if (PEAR::isError($result)) {
+            trigger_error($result->message, E_USER_ERROR);
+        }
+	}
+
+    function getAccountProfile($account)
     {
         global $sreg_fields;
 
         $result = $this->db->getRow(
-			'SELECT ' . implode(', ', $sreg_fields). ' FROM account WHERE username = ?',
+			'SELECT ' . implode(', ', $sreg_fields) . ' FROM account WHERE username = ?',
 			array($account));
 
         if (PEAR::isError($result)) {
+            trigger_error($result->message, E_USER_ERROR);
             return null;
         }
 
         return $result;
     }
-    */
-    
 }
 
 /**
@@ -231,11 +244,11 @@ class AuthBackend_LDAP extends Backend_LDAP
 			return $this->authenticate($username, $password);
 		}
 
-		$ldaprecord_dn = 'cn=' . $username . ',ou=People,' . $this->base_dn;
+		$ldaprecord_dn = 'uid=' . $username . ',ou=People,' . $this->base_dn;
 		
 		// In Active Directory, the values must be an array
 		$ldaprecord['objectclass'] = array();
-		$ldaprecord['objectclass'][] = "person";
+		$ldaprecord['objectclass'][] = 'Person';
 		$ldaprecord['cn'] = (isset($query['FirstName'])) ? $query['FirstName'] : $username;
 		$ldaprecord['sn'] = (isset($query['LastName'])) ? $query['LastName'] : $username;
 		// put user in objectClass inetOrgPerson so we can set the mail and phone number attributes
@@ -243,9 +256,6 @@ class AuthBackend_LDAP extends Backend_LDAP
 		// $ldaprecord['telephoneNumber'] = (isset($query['LastName'])) ? $query['TelephoneNumber'] : '';
 		
 		$ldaprecord['objectclass'][] = 'inetOrgPerson';
-		// jpegPhoto
-		// preferredLanguage
-		
 		$ldaprecord['objectclass'][] = 'posixAccount';
 		$ldaprecord['uid'] = $username;
 		$ldaprecord['homeDirectory'] = '/home/' . $username;
@@ -275,6 +285,75 @@ class AuthBackend_LDAP extends Backend_LDAP
     	$ldaprecord['userPassword'] = '{MD5}' . base64_encode(pack('H*',md5($password)));
 		return ldap_mod_replace($this->priv_conn, $user_dn, $ldaprecord);
 	}
+
+	function getAccountProfile($account)
+	{
+        global $sreg_fields;
+
+		$ldap_user = $this->get_ldap_user($account);
+		if ($ldap_user === null) {
+			trigger_error(ldap_error($this->conn), E_USER_ERROR);
+			return null;
+		}
+		// http://www.yolinux.com/TUTORIALS/LinuxTutorialLDAP-GILSchemaExtension.html
+		$profile['nickname'] = (array_key_exists('displayName', $ldap_user)) ? $ldap_user['displayName'][0] : null;
+		$profile['email'] = (array_key_exists('mail', $ldap_user)) ? $ldap_user['mail'][0] : null;
+		$profile['fullname'] = $ldap_user['cn'][0];
+		$profile['dob'] = null;
+		$profile['gender'] = null;
+		$profile['postcode'] = (array_key_exists('postalCode', $ldap_user)) ? $ldap_user['postalCode'][0] : null;
+		$profile['country'] = (array_key_exists('countryName', $ldap_user)) ? $ldap_user['countryName'][0] : null;
+		$profile['language'] = (array_key_exists('preferredLanguage', $ldap_user)) ? $ldap_user['preferredLanguage'][0] : null;;
+		$profile['timezone'] = null;
+		
+		foreach ($profile as $k => $v) {
+			if ($v == null) {
+				unset($profile[$k]);
+			}
+		}
+		
+		return $profile;
+	}
+	
+	function setAccountProfile($username, $data)
+	{
+		$ldaprecord_dn = 'uid=' . $username . ',ou=People,' . $this->base_dn;
+		
+		$ldaprecord['objectclass'] = array();
+		$ldaprecord['objectclass'][] = 'person';
+		$ldaprecord['objectclass'][] = 'inetOrgPerson';
+		$ldaprecord['objectclass'][] = 'posixAccount';
+		
+		if (array_key_exists('fullname', $data) && ! empty($data['fullname'])) {
+			$ldaprecord['cn'] = $data['fullname'];
+		}
+		if (array_key_exists('nickname', $data) && ! empty($data['nickname'])) {
+			$ldaprecord['displayName'] =  $data['nickname'];
+		}
+		if (array_key_exists('email', $data) && ! empty($data['email'])) {
+			$ldaprecord['mail'] = $data['email'];
+		}
+		if (array_key_exists('postcode', $data) && ! empty($data['postcode'])) {
+			$ldaprecord['postalCode'] = $data['postcode'];
+		}
+		if (array_key_exists('country', $data) && ! empty($data['country'])) {
+			$ldaprecord['countryName'] = $data['country'];
+		}
+		if (array_key_exists('language', $data) && ! empty($data['language'])) {
+			$ldaprecord['preferredLanguage'] = $data['language'];
+		}
+		
+		$this->log->debug(var_export($ldaprecord, true));
+		
+		$result = @ldap_modify($this->priv_conn, $ldaprecord_dn, $ldaprecord);
+		if ($result === FALSE) {
+			$this->log->err(ldap_error($this->priv_conn));
+		}
+		
+		return $result;
+	}
+
+
 
     function search($str = null)
     {

@@ -42,7 +42,7 @@ class CheckIdSetup extends CheckId
 		if ($this->account !== $this->expected_account) {
 	    	$this->log->info("User '$this->account' ($this->openid_identity) is authenticated, but not with the expected account ($this->expected_account)");
 	     	$this->server->clearAccount();
-	     	$this->controller->forward($method, $this->decoded_openid_request, 'serve');
+	     	$this->controller->forward($method, $request, 'serve');
 	     	// The forward shouldn't return if everything is ok.
 	     	return false;
 		}

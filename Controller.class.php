@@ -260,8 +260,14 @@ class Controller
 			case E_STRICT:
 				break;
 			case E_NOTICE:
+				if (strpos($this->template_engine->template_dir, $errfile) == 0) {
+					break;
+				}
 				$this->log->notice('System notice (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 			case E_WARNING:
+				if (strpos($this->template_engine->template_dir, $errfile) == 0) {
+					break;
+				}
 				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				break;
 			case E_ERROR:
@@ -288,7 +294,7 @@ class Controller
 				break;
 				
 			case E_USER_WARNING:
-				$this->log->warn('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->warning('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				if ($this->template_engine != null) {
 					$this->template_engine->addError($errstr);
 				} else {
