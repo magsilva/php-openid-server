@@ -119,7 +119,6 @@ class OpenIDServer
 	    unset($_SESSION['php_openidserver_account']);
 	    unset($_SESSION['php_openidserver_admin']);
 	    unset($_SESSION['php_openidserver_request']);
-	    unset($_SESSION['php_openidserver_sreg_request']);
 	}
 
 	function getAccount()

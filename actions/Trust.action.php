@@ -40,18 +40,7 @@ class Trust extends Action
 			trigger_error('Invalid OpenID trust request');
 			return false;
 		}
-	
-	    /*
-	     * TODO: This is nonsense.
-	    if (! in_array($decoded_openid_request->identity, $urls)){
-	    	$this->server->clearAccount();
-	    	$this->controller->setRequestInfo($request_info, $sreg);
-	    	if ($this->server->needAuth()) {
-	    		$this->controller->redirectWithLogin();
-	    	}
-	    }
-	    */
-	    
+	  
 		// It will be post if it's an CheckId_Setup and GET if CheckId_Immediate?	
 	    if ($method == 'POST' && (isset($request['trust_forever']) || $request['trust_once'])) {
 	    	$trust_forever = isset($request['trust_forever']);
@@ -71,16 +60,8 @@ class Trust extends Action
 	        }
 	
 	        if ($trusted) {
-	        	// Get requested user data.
-	            $allowed_fields = array();
-	            if (array_key_exists('sreg', $request)) {
-	                $allowed_fields = array_keys($request['sreg']);
-	            }
-
 	            $response = $openid_request->answer(true);
-				// TODO: Fix Sreg implementation
-	            // $this->server->addSregData($account, $response, $this->controller->getRequestInfo(), $allowed_fields);
-	            
+
 	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
 	            $sites = $this->storage->getRelatedSites($openid_request->trust_root);
@@ -112,43 +93,6 @@ class Trust extends Action
 	        }
 	    }
 	
-		/*
-	    if ($sreg != FALSE) {
-	        // Get the profile data and mark it up so it's easy to tell
-	        // what's required and what's optional.
-	        // TODO: $profile = $this->storage->getPersona($account);
-	
-	        list($optional, $required, $policy_url) = $sreg;
-	
-	        $sreg_labels = array('nickname' => 'Nickname',
-	                             'fullname' => 'Full name',
-	                             'email' => 'E-mail address',
-	                             'dob' => 'Birth date',
-	                             'postcode' => 'Postal code',
-	                             'gender' => 'Gender',
-	                             'country' => 'Country',
-	                             'timezone' => 'Time zone',
-	                             'language' => 'Language');
-	
-	        $profile['country'] = getCountryName($profile['country']);
-	        $profile['language'] = getLanguage($profile['language']);
-	
-	        $new_profile = array();
-	        foreach ($profile as $k => $v) {
-	            if (in_array($k, $optional) || in_array($k, $required)) {
-	                $new_profile[] = array('name' => $sreg_labels[$k],
-	                                       'real_name' => $k,
-	                                       'value' => $v,
-	                                       'optional' => in_array($k, $optional),
-	                                       'required' => in_array($k, $required));
-	            }
-	        }
-	
-	        $this->template->assign('profile', $new_profile);
-	        $this->template->assign('policy_url', $policy_url);
-	    }
-		*/
-		
 	    $this->template->assign('trust_root', $openid_request->trust_root);
 	    $this->template->assign('identity', $openid_request->identity);
 	    $this->template->display('trust.tpl');

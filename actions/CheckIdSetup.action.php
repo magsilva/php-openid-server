@@ -52,7 +52,6 @@ class CheckIdSetup extends CheckId
   		if ($this->storage->isTrusted($this->account, $this->decoded_openid_request->trust_root)) {
 			$this->log->info("User '$this->account' ($this->openid_identity) is authenticated and server '" . $this->decoded_openid_request->trust_root ."' is trusted");
 			$response =& $this->decoded_openid_request->answer(true);
-			// $this->server->addSregData($this->account, $response, $request);
 			$this->controller->handleResponse($response);
 
 			// The $controller->handleResponse() shouldn't return.

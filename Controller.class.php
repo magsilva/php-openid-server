@@ -72,14 +72,11 @@ class Controller
 	function saveOpenIDRequestInfo($request)
 	{
         $_SESSION['php_openidserver_openid_request'] = serialize($request);
-        // $_SESSION['php_openidserver_sreg_openid_request'] = serialize($sreg);
 	}
 	
 	function getOpenIDRequestInfo()
 	{
 		if (isset($_SESSION['php_openidserver_openid_request'])) {
-	       // return array(unserialize($_SESSION['php_openidserver_openid_request']),
-	       //              unserialize($_SESSION['php_openidserver_openid_sreg_request']));
 	       return unserialize($_SESSION['php_openidserver_openid_request']);
 	    } else {
 	        return false;
