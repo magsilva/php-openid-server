@@ -1,0 +1,4 @@
+The SSO protocol implemented by this server is rather simple. It just creates
+a cookie into the user's applications registered in the same domain of the
+original called application. The cookie is registered using a simple URL, which
+is given the parameter 'openid_name' set with the user's OpenID.

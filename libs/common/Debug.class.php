@@ -52,8 +52,8 @@ class DebugUtil
 	function traceHTTP()
 	{
 		$http = array();
-		$http['referer'] = $_SERVER['HTTP_REFERER'];
-		$http['cookie'] = $_SERVER['HTTP_COOKIE'];
+		$http['referer'] = array_key_exists('HTTP_REFERER', $_SERVER) ? $_SERVER['HTTP_REFERER'] : '';
+		$http['cookie'] = array_key_exists('HTTP_COOKIE', $_SERVER) ? $_SERVER['HTTP_COOKIE'] : '';
 		$http['client_ip'] = $_SERVER['REMOTE_ADDR'];
 		
 		return $http;

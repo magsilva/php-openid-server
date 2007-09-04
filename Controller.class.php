@@ -246,7 +246,8 @@ class Controller
 
 	function handleAssertion($file, $line, $message)
 	{
-		$this->log->notice('Failed assertion in ' . $file . ':' . $line . ' - ' . $message);
+		$this->log->notice('Failed assertion in ' . $file . ':' . $line . ' - ' . $message .
+			"\nTrace:\n" . DebugUtil::exportTrace());
     	
     	/* Don't execute PHP internal assertion handler */
     	return true;
@@ -284,21 +285,25 @@ class Controller
                 E_USER_NOTICE     => 'User Notice',
                 E_STRICT          => 'Runtime Notice'
         );
+        
 		switch ($errno) {
 			case E_STRICT:
 				break;
 			case E_NOTICE:
+				// Ignore messages generated the templates (usually undefined variables).
 				if ($this->template_engine !== null && strpos($this->template_engine->template_dir, $errfile) == 0) {
 					break;
 				}
-				$this->log->notice('System notice (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
-				 $errstr . "\nTrace:\n" . DebugUtil::exportTrace());
+				$this->log->notice('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
+					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
 				break;
 			case E_WARNING:
+				// Ignore messages generated the templates (usually undefined variables).
 				if ($this->template_engine !== null && strpos($this->template_engine->template_dir, $errfile) == 0) {
 					break;
 				}
-				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
+					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
 				break;
 			case E_ERROR:
 			case E_PARSE:
@@ -306,12 +311,22 @@ class Controller
 			case E_CORE_WARNING:
 			case E_COMPILE_ERROR:
 			case E_COMPILE_WARNING:
-				$this->log->err('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
+					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
+				$errstr = 'A severe internal application error has just ocurred. This site\'s administrator has' .
+						' been notified about it. Please, try accessing this site later.';
+				if (ob_get_contents() !== FALSE) {
+					ob_end_clean();
+				}
+				echo $errstr;
 				exit();
 				break;
 		
 			case E_USER_ERROR:
-				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
+				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
+					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
+				$errstr = 'An internal application error has just ocurred. This site\'s administrator has been ' .
+						'notified about this error. Please, try accessing this site later.';
 				if ($this->template_engine != null) {
 			    	  $this->template_engine->addError($errstr);
 				} else {
@@ -319,10 +334,6 @@ class Controller
 				}
 				break;	
 			
-			case E_USER_NOTICE:
-				$this->log->notice('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
-				break;
-				
 			case E_USER_WARNING:
 				$this->log->warning('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
 				if ($this->template_engine != null) {
@@ -331,10 +342,16 @@ class Controller
 					$this->error_backlog[] = $errstr;
 				}
 				break;
+
+			case E_USER_NOTICE:
+				$this->log->notice('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
+					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
+				break;
+			
 			
 			default:
-				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' . $errstr);
-				exit();
+				// We handle all the forseable errors. If something escaped us, it's a serious problem!
+				assert(FALSE);
     	}
 	
     	/* Don't execute PHP internal error handler */

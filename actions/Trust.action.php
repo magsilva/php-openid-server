@@ -53,9 +53,9 @@ class Trust extends OpenID_BaseAction
 	        }
 	
 	        if ($trusted) {
+	            // Start the SSO protocol
 	            $response = $this->openid_request->answer(true);
 
-	            // Propagate the cookies
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
 	            $sites = $this->storage->getRelatedSites($this->openid_request->trust_root);
 	            if (empty($sites)) {

@@ -16,12 +16,12 @@ sites using your OpenID.
   </tr>
   {foreach from=$sites item="site"}
   <tr>
-    <td><input type="checkbox" name="site[{$site.trust_root_full}]" id="site[{$site.trust_root_full}]"></td>
-    <td width="100%"><code><label for="site[{$site.trust_root_full}]">
-      {if $site.trust_root_full}
-        <html:abbr title="{$site.trust_root_full}">{$site.trust_root}</html:abbr>
+    <td><input type="checkbox" name="site[{$site.site_root_full}]" id="site[{$site.site_root_full}]"></td>
+    <td width="100%"><code><label for="site[{$site.site_root_full}]">
+      {if $site.site_root_full}
+        <html:abbr title="{$site.site_root_full}">{$site.site_root}</html:abbr>
       {else}
-        {$site.trust_root}
+        {$site.site_root}
       {/if}
     </code></code></td>
     <td>{if $site.trusted}<span class="trusted">Trusted</span>{else}

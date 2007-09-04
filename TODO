@@ -1,20 +1,27 @@
+- Criar tela para configurar sites.
+- Criar tela para configurar domínios.
 - Arrumar a página de administração.
 - Arrumar a página de configuração de sites confiáveis.
 - Arrumar a página de criação de usuário.
-- Criar a página de configuração de domínios de confiança.
-- Rever os trigger_error(E_USER_). Erros fatais (que impedem o funcionamento do sistema) são E_USER_ERROR,
-erros do usuário (entrada de dados) são E_USER_WARNING e erros do sistema (mas devidamente tratados pela
-aplicação, apesar de serem indicativos de erros mais graves do sistema ou do usuário) são E_USER_NOTICE.
+
+- Adicionar função de logout (que apague os cookies de todas as aplicações do
+domínio).
+- Usar criptografia no cookie.
+- Criar testes para o trigger_error: (1) se com o error_handler padrão, se a
+função (que causou o erro) sempre retorna FALSE  e (2) se com o error_handler
+da aplicação, se o processamento é interrompido e é mostrada a tela de erro no
+navegador.
+- Migrar código para PHP 5 (o PHP 4 será descontinuado em breve).
+- Em StorageBackend, mover as funções que independem da base de dados para a
+superclasse (na verdade, isso envolverá a criação de interfaces, daí o requisito
+para o PHP 5).
 - Escrever o relatório.
-- Restaurar a base de dados.
+- Restaurar a base de dados do OpenLDAP.
 - Testar a integração com o Windows 2003 Server.
 - Cria um esquema LDAP com os dados necessários ao SimpleRegistration do OpenID.
+- Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por
+exemplo).
 - Melhorar o desempenho de geração de nounces (criá-los previamente e mantê-los
 no banco).
 - Verificar se (e sim, o porque de) o OpenID está utilizando o modo inseguro de
 conexão (sem associação).
-- Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por
-exemplo).
-- Adicionar função de logout (que apague os cookies de todas as aplicações do
-domínio).
-- Usar criptografia no cookie.

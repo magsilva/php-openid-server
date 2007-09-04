@@ -1,0 +1,19 @@
+The errors as triggered using the function 'trigger_error' and handled by the
+'Controller->handleError()' method. The following guidelines must be followed:
+
+- Every error must have a message and a type.
+- The error type must be set to E_USER_ERROR, E_USER_WARNING or E_USER_NOTICE:
+  * Fatal errors (that hinders the proper application's functioning) must be
+    set as E_USER_ERROR. The error message must be readable by the admin (the
+    message to be shown to the user will be a generic one).
+  * User's errors (bad input data) must be set to E_USER_WARNING. The error
+    messages must be readable by the user (they will be shown as is to the
+    user).
+  * Non-fatal errors, handled by the application, must use the E_USER_NOTICE
+    error type. No message will be shown (either to the admin or the user), but
+    recorded in the log file.
+      
+Besides the 'trigger_error', there are assertions (using the function 'assert')
+all over the code. Their purpose is to catch impossible situations, or, better
+phrasing it, programming errors. They're handled by the
+'Controller->handleAssert()' method, in similar way to an notice type's error.

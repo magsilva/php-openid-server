@@ -77,6 +77,50 @@ class Storage_MYSQL extends Backend_MYSQL
         }
     }
 
+	function addSiteToDomain($domain, $site_root)
+	{
+       	if ($this->getSite($site_root) === FALSE) {
+       		$this->createSite($site_root);
+       	}
+       	
+       	$result = $this->db->query(
+				'INSERT INTO domain (name, site_root) VALUES (?, ?)',
+            	array($domain, $site_root));
+		if (PEAR::isError($result)) {
+			trigger_error($result->message, E_USER_ERROR);
+			return FALSE;
+       	}
+       	
+       	return TRUE;
+	}
+
+	function removeSiteFromDomain($domain, $site_root)
+	{
+       	$result = $this->db->query(
+				'DELETE FROM domain WHERE name = ? AND site_root = ?',
+            	array($domain, $site_root));
+		if (PEAR::isError($result)) {
+			trigger_error($result->message, E_USER_ERROR);
+			return FALSE;
+       	}
+       	
+       	return TRUE;
+	}
+	
+	function removeDomain($domain)
+	{
+       	$result = $this->db->query(
+				'DELETE FROM domain WHERE name = ?',
+            	array($domain));
+		if (PEAR::isError($result)) {
+			trigger_error($result->message, E_USER_ERROR);
+			return FALSE;
+       	}
+       	
+       	return TRUE;
+	}
+	
+
     function getRelatedDomains($site_root)
     {
         $result = $this->db->getAll(
@@ -94,6 +138,72 @@ class Storage_MYSQL extends Backend_MYSQL
 		return $domains;
     }
 
+ 	function getSSOTypeURIs()
+	{
+		// XML namespace value
+		define('SSO_XMLNS_1_0', 'http://numa.sc.usp.br/xmlns/1.0');
+
+	    return array(SSO_XMLNS_1_0);
+	}
+
+	function filterMatchAnySSOType(&$service)
+	{
+	    $uris = $service->getTypes();
+	
+	    foreach ($uris as $uri) {
+	        if (in_array($uri, Storage_MYSQL::getSSOTypeURIs())) {
+	            return true;
+	        }
+	    }
+	
+	    return false;
+	}
+
+	function getSSOService($site_root)
+	{
+		require_once "Auth/OpenID.php";
+		require_once "Auth/OpenID/Parse.php";
+		require_once "Auth/OpenID/Message.php";
+		require_once "Auth/Yadis/XRIRes.php";
+		require_once "Auth/Yadis/Yadis.php";
+		require_once('Auth/Yadis/ParanoidHTTPFetcher.php');
+		require_once('Auth/Yadis/PlainHTTPFetcher.php');
+		require_once('Auth/OpenID/Discover.php');
+
+		
+		// Discover OpenID services for a URI. Tries Yadis and falls back
+		// on old-style <link rel='...'> discovery if Yadis fails.
+
+	    // Might raise a yadis.discover.DiscoveryFailure if no document
+	    // came back for that URI at all.
+	    $services = array();
+	    $response = Auth_Yadis_Yadis::discover($site_root);
+    	if ($response->isFailure()) {
+        	return false;
+    	}
+    	
+		$xrds =& Auth_Yadis_XRDS::parseXRDS($response->response_text);
+	    if ($xrds) {
+    	    $services = $xrds->services(array(array('Storage_MYSQL', 'filterMatchAnySSOType')));
+		}
+
+    	if (! $services) {
+        	if ($response->isXRDS()) {
+            	return Auth_OpenID_discoverWithoutYadis($site_root);
+	        }
+
+    	    // Try to parse the response as HTML to get OpenID 1.0/1.1 (<link rel="...">)
+        	$sss_services = Auth_OpenID_ServiceEndpoint::fromHTML($site_root, $response->response_text);
+    	} else {
+        	$sso_services = Auth_OpenID_makeOpenIDEndpoints($site_root, $services);
+        }
+
+		$sso_services = Auth_OpenID_getOPOrUserServices($sso_services);
+		
+		// TODO: Enable many SSO services (for now, we are hardcoding to NUMA's SSO).
+		return $sso_services[0]->server_url;
+	}
+
 	function getRelatedSites($site_root)
 	{
 		$domains = $this->getRelatedDomains($site_root);
@@ -101,17 +211,26 @@ class Storage_MYSQL extends Backend_MYSQL
 		foreach ($domains as $domain) {
 			$sites[$domain] = array();
 			$result = $this->db->getAll(
-				'SELECT DISTINCT site_root, sso_method, sso_arguments FROM domain, site WHERE domain.site_root = site.root AND domain = ?',
+				'SELECT DISTINCT root, sso_method, sso_arguments FROM domain, site WHERE domain.site_root = site.root AND domain.name = ?',
 				array($domain));
-			
 			if (PEAR::isError($result)) {
 	            trigger_error($result->message, E_USER_ERROR);
+	            return FALSE;
         	}
-				
+			
 			foreach ($result as $site) {
-				$sites[$domain][$site['trust_root']] = array();
-				$sites[$domain][$site['trust_root']]['method'] = $site['sso_method'];
-				$sites[$domain][$site['trust_root']]['arguments'] = $site['sso_arguments'];
+				$sites[$domain][$site['root']] = array();
+				if (empty($site['sso_method'])) {
+					$sso_service = $this->getSSOService($site_root);
+					if ($sso_service !== FALSE) {
+						$site['sso_method'] = SSO_XMLNS_1_0;
+						$site['sso_arguments'] = $sso_service;
+						$this->updateSite($site['site_root'], $site['sso_method'], $site['sso_arguments']);
+					}  
+				}
+							
+				$sites[$domain][$site['root']]['sso_method'] = $site['sso_method'];
+				$sites[$domain][$site['root']]['sso_arguments'] = $site['sso_arguments'];
 			}
 			
 			if (empty($sites[$domain])) {
@@ -191,33 +310,84 @@ class Storage_MYSQL extends Backend_MYSQL
     function getSites($account)
     {
         $result = $this->db->getAll(
-			'SELECT site_root, trusted FROM site WHERE account_username = ?',
+			'SELECT site_root, trusted FROM trust_relationship WHERE account_username = ?',
 			array($account));
 			
 		if (PEAR::isError($result)) {
             trigger_error($result->message, E_USER_ERROR);
+            return FALSE;
         }
 		
 		return $result;
     }
 
-    function removeAccount($account)
+	function getSite($site_root)
     {
-        $result = $this->db->query(
-			'DELETE FROM account WHERE username = ?',
-			array($account));
+       	$result = $this->db->getOne(
+				'SELECT * FROM site WHERE root = ?',
+            	array($site_root));
+		if (PEAR::isError($result)) {
+			trigger_error($result->message, E_USER_ERROR);
+			return FALSE;
+       	}
+       	
+		return $result;
+    }
+
+    function createSite($site_root, $sso_method, $sso_arguments)
+    {
+       	$result = $this->db->query(
+				'INSERT INTO site (root, sso_method, sso_arguments) VALUES (?, ?, ?)',
+            	array($site_root, $sso_method, $sso_arguments));
+		if (! PEAR::isError($result)) {
+            return true;
+       	}
+		trigger_error($result->message, E_USER_NOTICE);
+
+
+		$result = $this->db->query(
+				'UPDATE site SET sso_method = ?, sso_arguments = ? WHERE root = ?',
+        		array($sso_method, $sso_arguments, $site_root));
+		if (! PEAR::isError($result)) {
+            return true;
+       	}
+
+		trigger_error($result->message, E_USER_ERROR);
+		return FALSE;
+    }
+
+    function removeSite($site_root)
+    {
+		$result = $this->db->query(
+			'DELETE FROM site WHERE root = ?',
+			array($site_root));
 		if (PEAR::isError($result)) {
             trigger_error($result->message, E_USER_ERROR);
+            return false;
         }
 		
-			
-        $result = $this->db->query(
-			'DELETE FROM trust_relationship WHERE account_username = ?',
-			array($account));
-		if (PEAR::isError($result)) {
-            trigger_error($result->message, E_USER_ERROR);
-        }
-			
+		return true;
+    }
+
+    function updateSite($site_root, $sso_method, $sso_arguments)
+    {
+		$result = $this->db->query(
+				'UPDATE site SET sso_method = ?, sso_arguments = ? WHERE root = ?',
+        		array($sso_method, $sso_arguments, $site_root));
+		if (! PEAR::isError($result)) {
+            return true;
+       	}
+		trigger_error($result->message, E_USER_NOTICE);
+
+       	$result = $this->db->query(
+				'INSERT INTO site (root, sso_method, sso_arguments) VALUES (?, ?, ?)',
+            	array($site_root, $sso_method, $sso_arguments));
+		if (! PEAR::isError($result)) {
+            return true;
+       	}
+
+		trigger_error($result->message, E_USER_ERROR);
+		return FALSE;
     }
 }
 

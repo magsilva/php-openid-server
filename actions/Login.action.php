@@ -43,7 +43,7 @@ class Login extends Action
 		                $this->server->setAccount($u, true);                
                     	$this->controller->forward($method, $request, 'index');
 	    			} else {
-	    				trigger_error('Incorrect authentication information.', E_USER_WARNING);
+	    				trigger_error('Incorrect authentication information for admin user.', E_USER_WARNING);
 	    			}
 	            }
 	            
@@ -58,10 +58,10 @@ class Login extends Action
 	            	}
 	            } else {
 	                trigger_error('The authentication has failed due to incorrect username or password. ' .
-	                		'Please try again.', E_USER_WARNING);
+	                		'Please, try again.', E_USER_WARNING);
 	            }
 			} else {
-				trigger_error('Please, fill in all the available fields.');
+				trigger_error('Please, fill in all the available fields.', E_USER_WARNING);
 			}
 	    }
 		

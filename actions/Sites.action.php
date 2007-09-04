@@ -29,6 +29,7 @@ class Sites extends Action
 	    
 	    $account = $this->server->getAccount();
 	    $sites = $this->storage->getSites($account);
+	    $max_trustroot_length = 50;
 	
 	    if ($method == 'POST' && $request['site']) {
 	    	if (isset($request['trust_selected'])) {
@@ -47,16 +48,13 @@ class Sites extends Action
             $this->template->addMessage('Settings saved.');
 	    }
 	
-	    $sites = $this->storage->getSites($account);
-	    $max_trustroot_length = 50;
-	
 	    foreach ($sites as $site) {
-	        $site['trust_root_full'] = $site['trust_root'];
-	        if (strlen($site['trust_root']) > $max_trustroot_length) {
-	            $site['trust_root'] = substr($site['trust_root'], 0, $max_trustroot_length) . "...";
+	        $site['site_root_full'] = $site['site_root'];
+	        if (strlen($site['site_root']) > $max_trustroot_length) {
+	            $site['site_root'] = substr($site['site_root'], 0, $max_trustroot_length) . "...";
 	        }
-	        $site['trust_root'] = preg_replace('/\*/', '<span class="anything">anything</span>',
-	                                                $site['trust_root']);
+	        $site['site_root'] = preg_replace('/\*/', '<span class="anything">anything</span>',
+	                                                $site['site_root']);
 	    }
 	
 	    $this->template->assign('sites', $sites);

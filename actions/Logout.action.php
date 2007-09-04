@@ -25,7 +25,7 @@ class Logout extends Action
 	{
 		$account = $this->server->getAccount();
 		if ($account == null) {
-			trigger_error('Trying to logout when not authenticated.', E_ERROR_NOTICE);
+			trigger_error('Trying to logout when not authenticated', E_ERROR_NOTICE);
 		}
 	    
 	    $this->log->debug("Logging out user '$account'");
