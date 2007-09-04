@@ -6,6 +6,8 @@
 
 - Adicionar função de logout (que apague os cookies de todas as aplicações do
 domínio).
+- Descobrir automaticamente serviços (aplicações Web) disponíveis em um domínio
+(rede local).
 - Usar criptografia no cookie.
 - Criar testes para o trigger_error: (1) se com o error_handler padrão, se a
 função (que causou o erro) sempre retorna FALSE  e (2) se com o error_handler
