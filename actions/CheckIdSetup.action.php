@@ -51,14 +51,14 @@ class CheckIdSetup extends CheckId
 
 		// User is authenticated.
   		if ($this->storage->isTrusted($this->account, $this->openid_request->trust_root)) {
-			$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated and server '" . $this->openid_request->trust_root ."' is trusted");
+			$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated and server '" . $this->openid_request->trust_root . "' is trusted");
 			$response =& $this->openid_request->answer(true);
 			$this->controller->handleResponse($response);
 
 			// The $controller->handleResponse() shouldn't return.
 			assert(FALSE);
 		} else {
-			$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated but server '$this->openid_request->trust_root' isn't trusted");
+			$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated but server '" . $this->openid_request->trust_root . "' isn't trusted");
 			$this->controller->saveOpenIDRequestInfo($this->openid_request);
 			$this->controller->forward($method, $request, 'trust');
 	

@@ -515,8 +515,9 @@ class Controller
 	
 	function redirectWithAdmin($action)
 	{
-		$this->log->debug("Redirecting requiring admin privileges to '$action'");
-		$this->redirect();
+		$this->log->debug('Redirecting to login as admin');
+		$this->saveRequestInfo();
+		$this->redirect(null, 'login');		
 	}
 	
 	function forward($method, $request, $action)
@@ -529,6 +530,14 @@ class Controller
 			$this->log->debug('Action requires authentication and user is not authenticated, so forwarding him to login');
 			$this->redirectWithLogin();
 		}
+		
+		if ($handler->requireAdmin() && ! $this->server->isAdmin()) {
+			$this->log->debug('Action requires administrator privileges and user is not authenticated as a administrator, so forwarding him to login as admin');
+			trigger_error('Incorrect authentication information for admin user.', E_USER_WARNING);
+			$this->server->clearAccount();
+			$this->redirectWithAdmin();
+		}
+		
 
 		$this->log->debug("Handing over the job to $action action's handler");
 		$result = $handler->process($method, $request);

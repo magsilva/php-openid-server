@@ -249,9 +249,11 @@ class Storage_MYSQL extends Backend_MYSQL
             	array($account, $site_root, $trusted));
 
 		if (! PEAR::isError($result)) {
-            return true;
-       	}
-
+	        return true;
+       	} else {
+    		trigger_error($result->message, E_USER_NOTICE);
+		}
+		
 		$this->db->query(
 				'UPDATE trust_relationship SET trusted = ? WHERE account_username = ? AND site_root = ?',
         		array($trusted, $account, $site_root));
@@ -263,6 +265,20 @@ class Storage_MYSQL extends Backend_MYSQL
 		trigger_error($result->message, E_USER_ERROR);
 		return false;
 	}
+
+	function removeTrust($account, $site_root)
+	{
+		$this->log->info("Removing the trust setting of '$site_root' for user '$account'");
+
+       	$result = $this->db->query(
+				'DELETE FROM trust_relationship WHERE account_username = ? AND site_root = ?',
+            	array($account, $site_root));
+
+		if (PEAR::isError($result)) {
+			trigger_error($result->message, E_USER_ERROR);
+       	}
+	}
+
 	
     function trust($account, $site_root)
     {
@@ -277,7 +293,7 @@ class Storage_MYSQL extends Backend_MYSQL
     	}
     }
 
-    function distrust($account, $site_root)
+    function distrust($account, $site_root, $delete = false)
     {
     	$this->__trustLog($account, $site_root, false);
     	   
@@ -287,6 +303,10 @@ class Storage_MYSQL extends Backend_MYSQL
 				$this->log->info("Propagating $site_root's distrust to $site");
 				$this->__trustLog($account, $site, false);
 			}
+    	}
+    	
+    	if ($delete) {
+			
     	}
     }
 

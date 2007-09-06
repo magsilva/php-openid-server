@@ -1,8 +1,9 @@
 - Criar tela para configurar sites.
 - Criar tela para configurar domínios.
-- Arrumar a página de administração.
+- Arrumar a página de administração (50%).
 - Arrumar a página de configuração de sites confiáveis.
-- Arrumar a página de criação de usuário.
+- Arrumar a página de criação de usuário (problemas na geração do captcha).
+- Revisar o CheckAuthentication.
 
 - Adicionar função de logout (que apague os cookies de todas as aplicações do
 domínio).
@@ -18,7 +19,6 @@ navegador.
 superclasse (na verdade, isso envolverá a criação de interfaces, daí o requisito
 para o PHP 5).
 - Escrever o relatório.
-- Restaurar a base de dados do OpenLDAP.
 - Testar a integração com o Windows 2003 Server.
 - Cria um esquema LDAP com os dados necessários ao SimpleRegistration do OpenID.
 - Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por

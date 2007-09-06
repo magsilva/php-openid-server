@@ -17,6 +17,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2005 JanRain, Inc.
 */
 
+require_once('common/HTTP.class.php');
+
 class CaptchaFactory
 {
 	var $font_path;
@@ -49,7 +51,7 @@ class CaptchaFactory
 	    $width = $this->text_size * $char_count + 10;
 	    $height = $this->text_size + 30;
 	    $image = imagecreate($width, $height);
-	
+
 	    $white = imagecolorallocate($image, 255, 255, 255);
 	    $black = imagecolorallocate($image, 0, 0, 0);
 	    imagefill($image, 0, 0, $white);
@@ -113,18 +115,8 @@ class CaptchaFactory
 	                           $r + $y_deviation,
 	                           $color_values[rand(0, $color_count - 1)]);
 	    }
-	
-	    if (imagetypes() & IMG_PNG) {
-	        header("Content-type: image/png");
-	        imagepng($image);
-	    } else if (imagetypes() & IMG_GIF) {
-	        header("Content-type: image/gif");
-	        imagegif($image);
-	    } else if (imagetypes() & IMG_JPG) {
-	        header("Content-type: image/jpeg");
-	        imagejpeg($image, '', 90);
-	    }
-	    
+		
+		HTTPUtil::sendImage($image);
 	    imagedestroy($image);
 	
 	    return md5($text);

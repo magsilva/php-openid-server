@@ -130,6 +130,14 @@ class OpenIDServer
 	    return null;
 	}
 	
+	function isAdmin() {
+		if (array_key_exists('php_openidserver_admin', $_SESSION)) {
+	        return true;
+	    }
+	
+	    return false;
+	}
+	
 	
 	function getAccountForUrl($identifier)
 	{

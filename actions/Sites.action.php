@@ -21,12 +21,13 @@ require_once('Action.class.php');
 
 class Sites extends Action
 {
+	function requireAuth()
+	{
+		return true;
+	}
+
 	function process($method, &$request)
 	{
-	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin();
-	    }
-	    
 	    $account = $this->server->getAccount();
 	    $sites = $this->storage->getSites($account);
 	    $max_trustroot_length = 50;
@@ -34,15 +35,15 @@ class Sites extends Action
 	    if ($method == 'POST' && $request['site']) {
 	    	if (isset($request['trust_selected'])) {
                 foreach ($request['site'] as $site => $on) {
-                    $this->storage->trustLog($account, $site, true);
+                    $this->storage->trust($account, $site);
                 }
             } else if (isset($request['untrust_selected'])) {
                 foreach ($request['site'] as $site => $on) {
-                    $this->storage->trustLog($account, $site, false);
+                    $this->storage->distrust($account, $site);
                 }
             } else if (isset($request['remove'])) {
                 foreach ($request['site'] as $site => $on) {
-                    $this->storage->removeTrustLog($account, $site);
+                    $this->storage->removeTrust($account, $site);
                 }
             }
             $this->template->addMessage('Settings saved.');

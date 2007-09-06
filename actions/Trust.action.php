@@ -42,14 +42,14 @@ class Trust extends OpenID_BaseAction
 	        $trusted = false;
 	        if ($trust_forever) {
 	            $this->storage->trust($this->account, $this->openid_request->trust_root);
-	            $this->log->debug("User $this->account trusts $this->openid_request->trust_root forever");
+	            $this->log->debug("User $this->account trusts '" . $this->openid_request->trust_root . "' forever");
 	            $trusted = true;
 	        } else if ($trust_once) {
-	            $this->log->debug("User $this->account trusts $this->openid_request->trust_root just for this time");
+	            $this->log->debug("User $this->account trusts '" . $this->openid_request->trust_root . "' just for this time");
 	            $trusted = true;
 	        } else {
 	            $this->storage->distrust($this->account, $this->openid_request->trust_root);
-	            $this->log->debug("User $this->account doesn't trust $this->openid_request->trust_root");
+	            $this->log->debug("User $this->account doesn't trust '" . $this->openid_request->trust_root . "'");
 	        }
 	
 	        if ($trusted) {
@@ -59,7 +59,7 @@ class Trust extends OpenID_BaseAction
 	            // TODO: Check if the user agent has changed (so that we don't have to issue a cookie
 	            $sites = $this->storage->getRelatedSites($this->openid_request->trust_root);
 	            if (empty($sites)) {
-	            	$this->log->debug("Site '$this->openid_request->trust_root' doesn't belong to a domain, so no need to propagate the trust");
+	            	$this->log->debug("Site '" . $this->openid_request->trust_root . "' doesn't belong to a domain, so no need to propagate the trust");
 		            $this->controller->clearOpenIDRequestInfo();
 	            	$this->controller->handleResponse($response);
 	            	
@@ -77,7 +77,7 @@ class Trust extends OpenID_BaseAction
 	            $_SESSION['php_openidserver_response'] = $response;
 	            $this->controller->clearOpenIDRequestInfo();
 
-            	$this->log->debug("Site '$this->openid_request->trust_root' belongs to a domain, so we need to propagate the trust");
+            	$this->log->debug("Site '" . $this->openid_request->trust_root . "' belongs to a domain, so we need to propagate the trust");
 	            return true;
 	        } else {
 	            $response = $this->openid_request->answer(false);

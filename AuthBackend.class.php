@@ -342,9 +342,7 @@ class AuthBackend_LDAP extends Backend_LDAP
 		if (array_key_exists('language', $data) && ! empty($data['language'])) {
 			$ldaprecord['preferredLanguage'] = $data['language'];
 		}
-		
-		$this->log->debug(var_export($ldaprecord, true));
-		
+
 		$result = @ldap_modify($this->priv_conn, $ldaprecord_dn, $ldaprecord);
 		if ($result === FALSE) {
 			$this->log->err(ldap_error($this->priv_conn));
@@ -360,21 +358,23 @@ class AuthBackend_LDAP extends Backend_LDAP
     	if ($str != null) {
     		$filter = str_replace("%USERNAME%", $str, $this->user_filter);
     	} else {
-    		$filter = str_replace("%USERNAME%", "", $this->user_filter);
+    		$filter = str_replace("%USERNAME%", '', $this->user_filter);
     	}
 
-   		$sr = ldap_search($this->conn, $this->base_dn, $filter, array('dn'));
-   	
-   		if (ldap_count_entries($this->conn, $sr) != 1) {
-   			return null;
-   		}
-   		$users = ldap_get_entries($this->conn, $sr);
-   		$result = array();
-		foreach ($users as $user) { 
-   			$result[] = $user[0];
+   		$result = ldap_search($this->conn, $this->base_dn, $filter);
+   		$result = ldap_search($this->conn, $this->base_dn, $filter, array('dn'));
+   		if ($result === FALSE) {
+			trigger_error(ldap_error($this->conn), E_USER_ERROR);
 		}
-		
-		return $result;
+   	
+   		$sr = array();
+   	   	if (ldap_count_entries($this->conn, $result) == 1) {
+	   		$users = ldap_get_entries($this->conn, $result);
+			foreach ($users as $user) { 
+	   			$sr[] = $user[0];
+			}
+   		}
+		return $sr;
 	}
 
 	function get_ldap_user($username)

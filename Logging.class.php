@@ -44,7 +44,7 @@ class Logging
 		 * PEAR_LOG_DEBUG	debug()		Debug-level messages
 		 */
 		$error_level = LOG_ERROR_LEVEL;
-		return Log::singleton('file', LOG_FILENAME, 'PHP-OPENID-SERVER', $handler_options, PEAR_LOG_NOTICE);
+		return Log::singleton('file', LOG_FILENAME, 'PHP-OPENID-SERVER', $handler_options, $error_level);
 	}
 }
 

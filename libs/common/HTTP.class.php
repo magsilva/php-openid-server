@@ -19,6 +19,35 @@ Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 
 class HTTPUtil
 {
+	
+	function sendImage($image)
+	{
+		header('Pragma: public');
+		header('Expires: 0');
+		header('Cache-Control: no-store, no-cache');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Cache-Control: public');
+	
+	    if (imagetypes() & IMG_PNG) {
+		    header('Content-type: image/png');
+		    // imagepng($image, NULL, 9, PNG_ALL_FILTERS);
+		    imagepng($image, '/home/msilva/Projects/php-openid-server/teste.png');
+		    imagepng($image);
+		    ob_start();
+		    ob_end_flush();
+	    } else if (imagetypes() & IMG_GIF) {
+		    ob_start();
+	        imagegif($image);
+		    ob_end_flush();
+	        header('Content-type: image/gif');
+	    } else if (imagetypes() & IMG_JPG) {
+		    ob_start();
+	        imagejpeg($image, '', 90);
+		    ob_end_flush();
+	        header('Content-type: image/jpeg');
+	    }
+	}
+
 	function getRequestHeaders()
 	{
 		$headers = array();

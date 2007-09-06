@@ -21,25 +21,25 @@ require_once('Action.class.php');
 
 class Admin extends Action
 {
+	function requireAuth()
+	{
+		return true;
+	}
+	
+	function requireAdmin()
+	{
+		return true;
+	}
+
 	function process($method, &$request)
 	{
-	    
-	    if ($this->server->needAuth()) {
-	    	$this->controller->redirectWithLogin();
-	    }
-	    if ($this->server->needAdmin()) {
-	    	$this->controller->redirectWithAdmin();
-	    }
-	
 	    if (array_key_exists('username', $request)) {
 	        $username = $request['username'];
 	        $pass1 = $request['pass1'];
 	        $pass2 = $request['pass2'];
-	
 	        $success = true;
-	
+	        
 	        $errors = $this->server->accountCheck($username, $pass1, $pass2);
-	
 	        if ($errors) {
 	            foreach ($errors as $e) {
 	                $this->template->addError($e);
@@ -55,29 +55,21 @@ class Admin extends Action
 	            }
 	        }
 	    } else if (array_key_exists('remove', $request)) {
-	
 	        foreach ($request['account'] as $account => $on) {
 	            $this->auth->removeAccount($account);
 	            $this->storage->removeAccount($account);
 	        }
-	
 	        $this->server->addMessage('Account(s) removed.');
-	        $this->controller->redirect($this->controller->getServerURL() . '?search=' . $request['search'], 'admin');
-	    }
-	
-	    if (array_key_exists('search', $request) &&
-	        ($request['search'] || array_key_exists('showall', $request))) {
-	        // Search for accounts.
-	
+	    } else if (array_key_exists('search', $request) || array_key_exists('showall', $request)) {
 	        if (array_key_exists('showall', $request)) {
-	            $results = $auth->search();
+	            $result = $this->auth->search();
 	            $this->template->assign('showall', 1);
 	        } else {
 	            $results = $this->auth->search($request['search']);
 	        }
 	
 	        $this->template->assign('search', $request['search']);
-	        $this->template->assign('search_results', $results);
+	        $this->template->assign('search_results', $result);
 	    }
 	
 	    $this->template->display('admin.tpl');

@@ -49,10 +49,10 @@ class CheckIdImmediate extends CheckId
 			} else {
 				// User is authenticated.	        
 		     	if ($this->storage->isTrusted($this->account, $openid_request->trust_root)) {
-					$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated and server '$this->openid_request->trust_root' is trusted");
+					$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated and server '" . $this->openid_request->trust_root . "' is trusted");
 					$response =& $this->openid_request->answer(true);
 				} else {
-					$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated but server '$this->openid_request->trust_root' isn't trusted");
+					$this->log->debug("User '$this->account' ($this->openid_identity) is authenticated but server '" . $this->openid_request->trust_root . "' isn't trusted");
 					$response =& $this->openid_request->answer(false);
 		        }
 			}

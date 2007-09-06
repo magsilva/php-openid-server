@@ -26,7 +26,10 @@ class OpenID_BaseAction extends Action
 	function process($method, &$request)
 	{
 	    if (! isset($this->openid_request)) {
+	    	$this->log->debug('Decoding OpenID request');
 	    	$this->openid_request = $this->openid_server->decodeRequest();
+	    } else {
+	    	$this->log->debug('Reusing OpenID request');
 	    }
 	    
 	    if (! $this->openid_request) {
@@ -41,7 +44,7 @@ class OpenID_BaseAction extends Action
 
 	    if (is_a($this->openid_request, 'Auth_OpenID_ServerError')) {
 	        trigger_error('OpenID request couldn\'t be handled: ' . $this->openid_request->text, E_USER_NOTICE);
-	        $this->controller->handleResponse($his->openid_request);
+	        $this->controller->handleResponse($this->openid_request);
 
 	        // Shouldn't return.
 	        assert(FALSE);

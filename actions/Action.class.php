@@ -43,6 +43,7 @@ class Action
 		$this->storage =& $this->server->storage_backend;
 		$this->template =& $this->controller->template_engine;
 		$this->sso =& $this->controller->sso;
+		$this->account  =& $this->server->getAccount();
 		
 		$this->log = &Logging::instance();
 	}
@@ -50,6 +51,11 @@ class Action
 	function process($method, &$request) {}
 	
 	function requireAuth()
+	{
+		return false;
+	}
+	
+	function requireAdmin()
 	{
 		return false;
 	}

@@ -53,8 +53,7 @@ define('ALLOW_PUBLIC_REGISTRATION', true);
  *
  */
 define('ADMIN_USERNAME', 'admin');
-define('ADMIN_PASSWORD_MD5', '456b7016a916a4b178dd72b947c152b7');
-
+define('ADMIN_PASSWORD_MD5', '21232f297a57a5a743894a0e4a801fc3');
 
 define('IDENTIFIER_PATTERN', '');
 
@@ -120,6 +119,6 @@ define('LOG_FILENAME', dirname(__FILE__) . '/out.log');
  * PEAR_LOG_INFO Informational
  * PEAR_LOG_DEBUG Debug-level messages
  */
-define('LOG_ERROR_LEVEL', PEAR_LOG_INFO);
+define('LOG_ERROR_LEVEL', PEAR_LOG_DEBUG);
 
 ?>
