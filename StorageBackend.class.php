@@ -25,16 +25,17 @@ require_once('common.php');
  */
 class StorageBackend
 {
-    function distrust($account, $site_root) {}
-    function trust($account, $site_root) {}
-    function siTrusted($account, $site_root) {}
-    function getSites($account) {}
+	function distrust($account, $site_root) {}
+	function trust($account, $site_root) {}
+	function isTrusted($account, $site_root) {}
+	function removeTrust($account, $site_root)
+	function getSites($account) {}
 }
 
 class Storage_MYSQL extends Backend_MYSQL
 {
-    function _init()
-    {
+	function _init()
+	{
 		$trust_relationship = 'CREATE TABLE trust_relationship (' .
 						'account_username VARCHAR(255) NOT NULL, '.
                         'site_root VARCHAR(512) NOT NULL, ' .
@@ -49,33 +50,33 @@ class Storage_MYSQL extends Backend_MYSQL
                         'PRIMARY KEY (root)' .
                         ')';
                         
-        $domain = 'CREATE TABLE domain (' .
+		$domain = 'CREATE TABLE domain (' .
         				'name VARCHAR(255) NOT NULL, ' .
         				'site_root VARCHAR(512) NOT NULL, ' .
         				'PRIMARY KEY (name, site_root)' .
         				')';
 
-        // Create tables for OpenID storage backend.
-        $tables = array(
+		// Create tables for OpenID storage backend.
+		$tables = array(
                       'trust_relationship' => $trust_relationship,
                       'site' => $site,
                       'domain' => $domain);
 
 		$this->log->debug('Creating tables \'' . implode('\', \'', array_keys($tables)) . '\'');
-        foreach ($tables as $key => $value) {
-            $result = $this->db->query($value);
-        	if (PEAR::isError($result)) {
-        		if ($result->message === 'DB Error: already exists') {
-	            	trigger_error($result->message, E_USER_NOTICE);
+	        foreach ($tables as $key => $value) {
+        	    $result = $this->db->query($value);
+        		if (PEAR::isError($result)) {
+        			if ($result->message === 'DB Error: already exists') {
+	            		trigger_error($result->message, E_USER_NOTICE);
         		} else {
-            		trigger_error($result->message, E_USER_ERROR);
-            		return $result;
+            			trigger_error($result->message, E_USER_ERROR);
+            			return $result;
         		}
-        	} else {
-            	$this->log->info("Created table '$key'");
-        	}
-        }
-    }
+			} else {
+				$this->log->info("Created table '$key'");
+			}
+		}
+	}
 
 	function addSiteToDomain($domain, $site_root)
 	{
@@ -303,10 +304,6 @@ class Storage_MYSQL extends Backend_MYSQL
 				$this->log->info("Propagating $site_root's distrust to $site");
 				$this->__trustLog($account, $site, false);
 			}
-    	}
-    	
-    	if ($delete) {
-			
     	}
     }
 
