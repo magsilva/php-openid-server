@@ -353,7 +353,6 @@ class Controller
 			
 			
 			default:
-				var_dump($errno); exit();
 				// We handle all the forseable errors. If something escaped us, it's a serious problem!
 				assert(FALSE);
     	}
