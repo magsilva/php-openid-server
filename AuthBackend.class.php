@@ -263,7 +263,6 @@ class AuthBackend_LDAP extends Backend_LDAP
 		$ldaprecord['uidNumber'] = $this->get_next_number('uid');
 		$ldaprecord['gidNumber'] = $this->get_next_number('gid');
 
-		// var_dump($ldaprecord_dn, $ldaprecord); exit();
 		$result = @ldap_add($this->priv_conn, $ldaprecord_dn, $ldaprecord);
 		if ($result === FALSE) {
 			$this->log->err(ldap_error($this->priv_conn));
