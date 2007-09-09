@@ -28,7 +28,7 @@ class StorageBackend
 	function distrust($account, $site_root) {}
 	function trust($account, $site_root) {}
 	function isTrusted($account, $site_root) {}
-	function removeTrust($account, $site_root)
+	function removeTrust($account, $site_root) {}
 	function getSites($account) {}
 }
 

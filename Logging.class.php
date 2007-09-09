@@ -44,7 +44,27 @@ class Logging
 		 * PEAR_LOG_DEBUG	debug()		Debug-level messages
 		 */
 		$error_level = LOG_ERROR_LEVEL;
-		return Log::singleton('file', LOG_FILENAME, 'PHP-OPENID-SERVER', $handler_options, $error_level);
+		
+		$enable_logfile_output = false;
+		if (is_file(LOG_FILENAME)) {
+			if (is_writable(LOG_FILENAME)) {
+				$enable_logfile_output = true;
+			} else {
+				if (@chmod(LOG_FILENAME, 0700)) {
+					$enable_logfile_output = true;
+				} 
+			}
+		} else {
+			if (touch(LOG_FILENAME)) {
+				$enable_logfile_output = true;
+			}
+		}
+		
+		if ($enable_logfile_output) { 
+			return Log::singleton('file', LOG_FILENAME, 'PHP-OPENID-SERVER', $handler_options, $error_level);
+		} else {
+			return Log::singleton('syslog', '', 'PHP-OPENID-SERVER', $handler_options, $error_level);
+		}
 	}
 }
 
