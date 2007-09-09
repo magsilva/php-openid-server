@@ -60,9 +60,16 @@ class Template extends Smarty
         $this->messages = array();
     }
 
-    function addError($str)
+    function addError($str, $stopApp = false)
     {
-        $this->errors[] = $str;
+        if ($this->errors[count($this->errors) - 1] !== $str) {
+        	$this->errors[] = $str;
+        }
+        
+        if ($stopApp === true) {
+        	$this->display('error.tpl', true);
+        	exit();
+        }
     }
 
     function addMessage($str)

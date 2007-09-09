@@ -74,21 +74,26 @@ class Backend_MYSQL extends Backend
         $this->db =& DB::connect($parameters);
 
         if (PEAR::isError($this->db)) {
-        	trigger_error($this->db, E_USER_ERROR);
+        	trigger_error('Couldn\'t connect to the database', E_USER_ERROR);
         	return false;
         }
         
-        $this->db->setFetchMode(DB_FETCHMODE_ASSOC);
-        $this->db->autoCommit(true);
+        $result = $this->db->setFetchMode(DB_FETCHMODE_ASSOC);
         if (PEAR::isError($this->db)) {
-        	trigger_error($this->db, E_USER_ERROR);
+        	trigger_error($result->message, E_USER_ERROR);
+        	return false;
+        }
+        
+        $result = $this->db->autoCommit(true);
+        if (PEAR::isError($this->db)) {
+        	trigger_error($result->message, E_USER_ERROR);
         	return false;
         }
 
        	if (CREATE_DATABASE) {
        		$result = $this->_init();
        		if (PEAR::isError($result)) {
-        		trigger_error($this->db, E_USER_ERROR);
+        		trigger_error($result->message, E_USER_ERROR);
         		return false;
        		}
         }

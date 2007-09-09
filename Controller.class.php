@@ -283,7 +283,8 @@ class Controller
                 E_USER_ERROR      => 'User Error',
                 E_USER_WARNING    => 'User Warning',
                 E_USER_NOTICE     => 'User Notice',
-                E_STRICT          => 'Runtime Notice'
+                E_STRICT          => 'Runtime Notice',
+                E_RECOVERABLE_ERROR     => 'Recoverable Fatal Error'
         );
         
 		switch ($errno) {
@@ -311,10 +312,11 @@ class Controller
 			case E_CORE_WARNING:
 			case E_COMPILE_ERROR:
 			case E_COMPILE_WARNING:
+			case E_RECOVERABLE_ERROR:
 				$this->log->warning('System error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
 					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
 				$errstr = 'A severe internal application error has just ocurred. This site\'s administrator has' .
-						' been notified about it. Please, try accessing this site later.';
+						' been notified about it. Please, try to access this site later.';
 				if (ob_get_contents() !== FALSE) {
 					ob_end_clean();
 				}
@@ -326,11 +328,12 @@ class Controller
 				$this->log->err('Error (' . $errortype[$errno] . ') in ' . $errfile . ':' . $errline . ' - ' .
 					$errstr . "\nTrace:\n" . DebugUtil::exportTrace());
 				$errstr = 'An internal application error has just ocurred. This site\'s administrator has been ' .
-						'notified about this error. Please, try accessing this site later.';
+						'notified about this error. Please, try to access this site later.';
 				if ($this->template_engine != null) {
-			    	  $this->template_engine->addError($errstr);
+			    	  $this->template_engine->addError($errstr, true);
 				} else {
-					$this->error_backlog[] = $errstr;
+					echo $errstr;
+					exit();
 				}
 				break;	
 			
@@ -350,6 +353,7 @@ class Controller
 			
 			
 			default:
+				var_dump($errno); exit();
 				// We handle all the forseable errors. If something escaped us, it's a serious problem!
 				assert(FALSE);
     	}

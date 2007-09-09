@@ -67,7 +67,7 @@ define('STORAGE_BACKEND', 'MYSQL');
 global $storage_parameters;
 $storage_parameters = array('username' => 'test',
                             'password' => 'test',
-                            'database' => 'php-openid-server-dev',
+                            'database' => 'php-openid-server',
                             'hostspec' => 'localhost');
 
 /**
@@ -80,10 +80,10 @@ $storage_parameters = array('username' => 'test',
 define('AUTH_BACKEND', 'LDAP');
 global $auth_parameters;
 $auth_parameters = array('server_name' => 'localhost',
-                         'base_dn' => 'dc=m242,dc=numa,dc=intranet',
+                         'base_dn' => 'dc=localhost',
                          'bind_username' => null,
                          'bind_password' => null,
-                         'admin_username' => 'cn=admin,dc=m242,dc=numa,dc=intranet',
+                         'admin_username' => 'cn=admin,dc=localhost',
                          'admin_password' => 'admin',
                          'user_filter' => '(uid=%USERNAME%)');
 
