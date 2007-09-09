@@ -62,7 +62,7 @@ class Template extends Smarty
 
     function addError($str, $stopApp = false)
     {
-        if ($this->errors[count($this->errors) - 1] !== $str) {
+        if (! empty($this->errors) && $this->errors[count($this->errors) - 1] !== $str) {
         	$this->errors[] = $str;
         }
         

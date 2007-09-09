@@ -51,10 +51,6 @@ class Register extends Action
 	            if ($request['username'] != ADMIN_USERNAME &&
 	                $this->auth->newAccount($request['username'], $request['pass1'], $request)) {
 	
-	                // Add an identity URL to storage.
-	                $this->storage->addIdentifier($request['username'],
-	                                        $this->server->getAccountIdentifier($request['username']));
-	
 	                $this->server->setAccount($request['username']);
 	                $this->server->addMessage('Registration successful; welcome, ' . $request['username'] . '!');
 	                $this->controller->redirect();

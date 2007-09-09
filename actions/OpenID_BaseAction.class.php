@@ -53,6 +53,3 @@ class OpenID_BaseAction extends Action
 }
 
 ?>
-
-
-?>

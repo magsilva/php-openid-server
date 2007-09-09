@@ -37,5 +37,4 @@ class Redirect extends Action
 	}
 }
 
-
 ?>
