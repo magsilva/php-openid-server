@@ -28,7 +28,7 @@ class Account extends Action
 
 	function process($method, &$request)
 	{
-		global $timezone_strings, $country_codes, $language_codes;
+		global $timezone_strings, $country_codes, $language_codes, $sreg_fields;
 
 	    $account = $this->server->getAccount();
 		$profile = $this->auth->getAccountProfile($account);

@@ -52,7 +52,7 @@ class Register extends Action
 	                $this->auth->newAccount($request['username'], $request['pass1'], $request)) {
 	
 	                $this->server->setAccount($request['username']);
-	                $this->server->addMessage('Registration successful; welcome, ' . $request['username'] . '!');
+	                $this->server->addMessage('Registration successful. Welcome, ' . $request['username'] . '!');
 	                $this->controller->redirect();
 	            } else {
 	                $this->template->addError('Sorry; that username is already taken!');

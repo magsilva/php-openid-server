@@ -2,8 +2,12 @@
 - Criar tela para configurar domínios.
 - Arrumar a página de administração (50%).
 - Arrumar a página de configuração de sites confiáveis.
-- Arrumar a página de criação de usuário (problemas na geração do captcha).
 - Revisar o CheckAuthentication.
+- Cria um esquema LDAP com os dados necessários ao SimpleRegistration do OpenID.
+- Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por
+exemplo).
+- Verificar se (e sim, o porque de) o OpenID está utilizando o modo inseguro de
+conexão (sem associação).
 
 - Adicionar função de logout (que apague os cookies de todas as aplicações do
 domínio).
@@ -20,10 +24,6 @@ superclasse (na verdade, isso envolverá a criação de interfaces, daí o requi
 para o PHP 5).
 - Escrever o relatório.
 - Testar a integração com o Windows 2003 Server.
-- Cria um esquema LDAP com os dados necessários ao SimpleRegistration do OpenID.
-- Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por
-exemplo).
 - Melhorar o desempenho de geração de nounces (criá-los previamente e mantê-los
 no banco).
-- Verificar se (e sim, o porque de) o OpenID está utilizando o modo inseguro de
-conexão (sem associação).
+
