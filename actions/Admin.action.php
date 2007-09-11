@@ -34,6 +34,7 @@ class Admin extends Action
 	function process($method, &$request)
 	{
 	    if (array_key_exists('username', $request)) {
+	    	$this->log->debug('Creating account');
 	        $username = $request['username'];
 	        $pass1 = $request['pass1'];
 	        $pass2 = $request['pass2'];
@@ -55,21 +56,24 @@ class Admin extends Action
 	            }
 	        }
 	    } else if (array_key_exists('remove', $request)) {
+	    	$this->log->debug('Removing account');
 	        foreach ($request['account'] as $account => $on) {
 	            $this->auth->removeAccount($account);
 	            $this->storage->removeAccount($account);
 	        }
 	        $this->server->addMessage('Account(s) removed.');
 	    } else if (array_key_exists('search', $request) || array_key_exists('showall', $request)) {
+	    	$this->log->debug('Searching for an account');
+	    	
 	        if (array_key_exists('showall', $request)) {
-	            $result = $this->auth->search();
+	            $results = $this->auth->search();
 	            $this->template->assign('showall', 1);
 	        } else {
 	            $results = $this->auth->search($request['search']);
 	        }
 	
 	        $this->template->assign('search', $request['search']);
-	        $this->template->assign('search_results', $result);
+	        $this->template->assign('search_results', $results);
 	    }
 	
 	    $this->template->display('admin.tpl');

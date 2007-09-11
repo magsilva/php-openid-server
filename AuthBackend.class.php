@@ -19,7 +19,7 @@ Copyright (C) 2005 JanRain, Inc.
 
 
 require_once('Backend.class.php');
-
+require_once('common/LDAP.class.php');
 /**
  * Authentication backend interface.
  */
@@ -356,38 +356,42 @@ class AuthBackend_LDAP extends Backend_LDAP
 		return $result;
 	}
 
-
+	function getUserFilter($username)
+	{
+	 	if ($username != null) {
+    		$filter = str_replace('%USERNAME%', $username, $this->user_filter);
+    	} else {
+    		$filter = str_replace('%USERNAME%', '*', $this->user_filter);
+    	}
+		return $filter;
+	}
 
     function search($str = null)
     {
-    	if ($str != null) {
-    		$filter = str_replace("%USERNAME%", $str, $this->user_filter);
-    	} else {
-    		$filter = str_replace("%USERNAME%", '', $this->user_filter);
-    	}
-
-   		$result = ldap_search($this->conn, $this->base_dn, $filter);
-   		$result = ldap_search($this->conn, $this->base_dn, $filter, array('dn'));
+    	$filter = $this->getUserFilter($str);
+		$result = ldap_search($this->conn, $this->base_dn, $filter);
    		if ($result === FALSE) {
 			trigger_error(ldap_error($this->conn), E_USER_ERROR);
 		}
-   	
-   		$sr = array();
-   	   	if (ldap_count_entries($this->conn, $result) == 1) {
-	   		$users = ldap_get_entries($this->conn, $result);
-			foreach ($users as $user) { 
-	   			$sr[] = $user[0];
+   		$users = array();
+   	   	if (ldap_count_entries($this->conn, $result) >= 1) {
+	   		$entries = ldap_get_entries($this->conn, $result);
+	   		if (array_key_exists('count', $entries)) {
+	   			unset($entries['count']);
+	   		}
+	   		foreach ($entries as $entry) {
+				$user = LDAPUtil::cleanUpEntry($entry);
+	   			$users[] = $user;
 			}
    		}
-		return $sr;
+		return $users;
 	}
 
 	function get_ldap_user($username)
 	{
-    	$filter = str_replace("%USERNAME%", $username, $this->user_filter);
+    	$filter = $this->getUserFilter($username);
     	
     	$sr = ldap_search($this->conn, $this->base_dn, $filter);
-    	
     	if (ldap_count_entries($this->conn, $sr) != 1) {
     		return null;
     	}

@@ -16,8 +16,8 @@
 <table>
   {foreach from=$search_results item="account"}
   <tr>
-    <td><input id="account[{$account}]" type="checkbox" name="account[{$account}]"></td>
-    <td><label for="account[{$account}]">{$account}</label></td>
+    <td><input id="account[{$account.uid}]" type="checkbox" name="account[{$account.cn}]]"></td>
+    <td><label for="account[{$account.uid}]">{$account.cn}</label></td>
   </tr>
   {/foreach}
 </table>
