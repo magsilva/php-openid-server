@@ -18,7 +18,7 @@ Copyright (C) 2005 JanRain, Inc.
 */
 
 require_once('common/Debug.class.php');
-
+require_once('common/PHPCompatHack.php');
 
 class Controller
 {
