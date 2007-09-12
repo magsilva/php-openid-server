@@ -59,7 +59,6 @@ class Admin extends Action
 	    	$this->log->debug('Removing account');
 	        foreach ($request['account'] as $account => $on) {
 	            $this->auth->removeAccount($account);
-	            $this->storage->removeAccount($account);
 	        }
 	        $this->server->addMessage('Account(s) removed.');
 	    } else if (array_key_exists('search', $request) || array_key_exists('showall', $request)) {

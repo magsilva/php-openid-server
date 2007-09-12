@@ -42,6 +42,9 @@ class LDAPUtil
 	function cleanUpEntry($entry)
 	{
 	    $retEntry = array();
+	    if (array_key_exists('dn', $entry)) {
+	    	$retEntry['dn'] = $entry['dn']; 
+	    }
 	    for ($i = 0; $i < $entry['count']; $i++) {
 	        $attribute = $entry[$i];
 	        if ($entry[$attribute]['count'] == 1) {

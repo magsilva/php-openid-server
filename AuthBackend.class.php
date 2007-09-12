@@ -277,7 +277,17 @@ class AuthBackend_LDAP extends Backend_LDAP
     		return false;
     	}
     	$user = $this->get_ldap_user($username);
-		return ldap_delete($this->priv_conn, $user);
+    	if ($user == null) {
+    		return false;
+    	}
+    	
+    	$user = LDAPUtil::cleanUpEntry($user);
+		$result = ldap_delete($this->priv_conn, $user['dn']);
+		if ($result === FALSE) {
+			$this->log->err(ldap_error($this->priv_conn));
+		}
+
+		return $result;
     }
 
     function setPassword($username, $password)
@@ -288,7 +298,13 @@ class AuthBackend_LDAP extends Backend_LDAP
     	$user = $this->get_ldap_user($username);
     	$user_dn = $user['dn'];
     	$ldaprecord['userPassword'] = '{MD5}' . base64_encode(pack('H*',md5($password)));
-		return ldap_mod_replace($this->priv_conn, $user_dn, $ldaprecord);
+		$result =  ldap_mod_replace($this->priv_conn, $user_dn, $ldaprecord);
+		if ($result === FALSE) {
+			$this->log->err(ldap_error($this->priv_conn));
+		}
+		
+		return $result;
+		
 	}
 
 	function getAccountProfile($account)
