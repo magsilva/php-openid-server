@@ -49,7 +49,7 @@ class Admin extends Action
 	            // Good.
 	            if ($username != ADMIN_USERNAME && $this->auth->newAccount($username, $pass1, $request)) {
 	                // Add an identity URL to storage.
-	                $this->server->addMessage('Account created.');
+	                $this->template->addMessage('Account created.');
 	                $this->controller->redirect('admin');
 	            } else {
 	                $this->template->addError('Sorry; the username "' .$username . '" is already taken!');
