@@ -1,7 +1,4 @@
-- Criar tela para configurar sites.
 - Criar tela para configurar domínios.
-- Arrumar a página de administração (50%).
-- Arrumar a página de configuração de sites confiáveis.
 - Revisar o CheckAuthentication.
 - Cria um esquema LDAP com os dados necessários ao SimpleRegistration do OpenID.
 - Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por
