@@ -255,7 +255,7 @@ class Storage_MYSQL extends Backend_MYSQL
     		trigger_error($result->message, E_USER_NOTICE);
 		}
 		
-		$this->db->query(
+		$result = $this->db->query(
 				'UPDATE trust_relationship SET trusted = ? WHERE account_username = ? AND site_root = ?',
         		array($trusted, $account, $site_root));
 

@@ -29,26 +29,26 @@ class Sites extends Action
 	function process($method, &$request)
 	{
 	    $account = $this->server->getAccount();
-	    $sites = $this->storage->getSites($account);
 	    $max_trustroot_length = 50;
 	
 	    if ($method == 'POST' && $request['site']) {
 	    	if (isset($request['trust_selected'])) {
                 foreach ($request['site'] as $site => $on) {
-                    $this->storage->trust($account, $site);
+                    $this->storage->trust($account, (string) $site);
                 }
             } else if (isset($request['untrust_selected'])) {
                 foreach ($request['site'] as $site => $on) {
-                    $this->storage->distrust($account, $site);
+                    $this->storage->distrust($account, (string) $site);
                 }
             } else if (isset($request['remove'])) {
                 foreach ($request['site'] as $site => $on) {
-                    $this->storage->removeTrust($account, $site);
+                    $this->storage->removeTrust($account, (string) $site);
                 }
             }
             $this->template->addMessage('Settings saved.');
 	    }
 	
+	    $sites = $this->storage->getSites($account);
 	    foreach ($sites as $site) {
 	        $site['site_root_full'] = $site['site_root'];
 	        if (strlen($site['site_root']) > $max_trustroot_length) {
