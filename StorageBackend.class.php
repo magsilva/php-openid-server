@@ -78,6 +78,7 @@ class Storage_MYSQL extends Backend_MYSQL
 		}
 	}
 
+
 	function addSiteToDomain($domain, $site_root)
 	{
        	if ($this->getSite($site_root) === FALSE) {
@@ -88,10 +89,9 @@ class Storage_MYSQL extends Backend_MYSQL
 				'INSERT INTO domain (name, site_root) VALUES (?, ?)',
             	array($domain, $site_root));
 		if (PEAR::isError($result)) {
-			trigger_error($result->message, E_USER_ERROR);
-			return FALSE;
-       	}
-       	
+    		trigger_error($result->message, E_USER_NOTICE);
+		}
+
        	return TRUE;
 	}
 
@@ -101,8 +101,7 @@ class Storage_MYSQL extends Backend_MYSQL
 				'DELETE FROM domain WHERE name = ? AND site_root = ?',
             	array($domain, $site_root));
 		if (PEAR::isError($result)) {
-			trigger_error($result->message, E_USER_ERROR);
-			return FALSE;
+			trigger_error($result->message, E_USER_NOTICE);
        	}
        	
        	return TRUE;
@@ -138,6 +137,34 @@ class Storage_MYSQL extends Backend_MYSQL
 		}
 		return $domains;
     }
+
+	function getSitesFromDomain($domain = null)
+	{
+		$sites = array();
+		
+		if ($domain == null) {
+			$result = $this->db->getAll('SELECT name, site_root FROM domain');
+		} else {
+			$result = $this->db->getAll('SELECT name, site_root FROM domain WHERE name = ?', array($domain));
+		}	
+		if (PEAR::isError($result)) {
+		   	trigger_error($result->message, E_USER_ERROR);
+			return FALSE;
+		}
+		
+		foreach ($result as $site) {
+			$domain = $site['name'];
+			$siteroot = $site['site_root'];
+			$id = $domain . ',' . base64_encode($siteroot);
+			$result_element = array();
+			$result_element['id'] = $id;
+			$result_element['domain'] = $domain;
+			$result_element['siteroot'] = $siteroot;
+			$sites[] =  $result_element;
+		}
+		
+		return $sites;
+	}
 
  	function getSSOTypeURIs()
 	{

@@ -7,7 +7,8 @@
     <li><a href="{$SERVER_URL}">Home</a></li>
     {if $account}
 		{if $ADMIN}
-			<li><a href="{$SERVER_URL}?action=admin">Administration</a></li>
+			<li><a href="{$SERVER_URL}?action=accountAdmin">Accounts</a></li>
+			<li><a href="{$SERVER_URL}?action=domainAdmin">Domains</a></li>
 		{else}
 			<li><a href="{$SERVER_URL}?action=account">My Profile</a></li>
 			<li><a href="{$SERVER_URL}?action=sites">Sites</a></li>

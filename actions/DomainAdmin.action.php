@@ -19,7 +19,7 @@ Copyright (C) 2005 JanRain, Inc.
 
 require_once('Action.class.php');
 
-class Admin extends Action
+class DomainAdmin extends Action
 {
 	function requireAuth()
 	{
@@ -33,49 +33,38 @@ class Admin extends Action
 
 	function process($method, &$request)
 	{
-	    if (array_key_exists('username', $request)) {
-	    	$this->log->debug('Creating account');
-	        $username = $request['username'];
-	        $pass1 = $request['pass1'];
-	        $pass2 = $request['pass2'];
-	        $success = true;
+	    if (array_key_exists('domainname', $request)) {
+	    	$this->log->debug('Creating domain');
+	        $domain = $request['domainname'];
+	        $siteroot = $request['domainsiteroot'];
 	        
-	        $errors = $this->server->accountCheck($username, $pass1, $pass2);
-	        if ($errors) {
-	            foreach ($errors as $e) {
-	                $this->template->addError($e);
-	            }
-	        } else {
-	            // Good.
-	            if ($username != ADMIN_USERNAME && $this->auth->newAccount($username, $pass1, $request)) {
-	                // Add an identity URL to storage.
-	                $this->template->addMessage('Account created.');
-	                $this->controller->redirect('admin');
-	            } else {
-	                $this->template->addError('Sorry; the username "' .$username . '" is already taken!');
-	            }
-	        }
+	     	$this->storage->addSiteToDomain($domain, $siteroot);
+            $this->template->addMessage('Site added to domain ' . $domain);
+            $this->controller->redirect('domainAdmin');
 	    } else if (array_key_exists('remove', $request)) {
-	    	$this->log->debug('Removing account');
-	        foreach ($request['account'] as $account => $on) {
-	            $this->auth->removeAccount($account);
+	    	$this->log->debug('Removing domain');
+	        foreach ($request['domainelement'] as $id => $on) {
+	        	$domain_element = explode(',', $id);
+	        	$domain = $domain_element[0];
+	        	$site_root = base64_decode($domain_element[1]);
+	        	$this->storage->removeSiteFromDomain($domain, $site_root);
 	        }
-	        $this->server->addMessage('Account(s) removed.');
+	        $this->server->addMessage('Sites removed from domains.');
 	    } else if (array_key_exists('search', $request) || array_key_exists('showall', $request)) {
-	    	$this->log->debug('Searching for an account');
+	    	$this->log->debug('Searching for domain\'s');
 	    	
 	        if (array_key_exists('showall', $request)) {
-	            $results = $this->auth->search();
+	            $results = $this->storage->getSitesFromDomain();
 	            $this->template->assign('showall', 1);
 	        } else {
-	            $results = $this->auth->search($request['search']);
+	            $results = $this->storage->getSitesFromDomain($request['search']);
 	        }
 	
 	        $this->template->assign('search', $request['search']);
 	        $this->template->assign('search_results', $results);
 	    }
 	
-	    $this->template->display('admin.tpl');
+	    $this->template->display('domainAdmin.tpl');
     }
 }
 

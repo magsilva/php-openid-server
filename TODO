@@ -1,10 +1,6 @@
-- Criar tela para configurar domínios.
-- Revisar o CheckAuthentication.
 - Cria um esquema LDAP com os dados necessários ao SimpleRegistration do OpenID.
 - Acrescentar suporte a algumas extensões do OpenID (SimpleRegistration, por
 exemplo).
-- Verificar se (e sim, o porque de) o OpenID está utilizando o modo inseguro de
-conexão (sem associação).
 
 - Adicionar função de logout (que apague os cookies de todas as aplicações do
 domínio).
