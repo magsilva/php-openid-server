@@ -505,6 +505,7 @@ class Controller
 		}
 		
 		$this->log->info("Redirecting to '$url'");
+	 	header('Content-Lenght: 0');
 	 	header('Location: ' . $url);
 	    exit();
 	}
