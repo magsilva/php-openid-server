@@ -19,6 +19,14 @@ Copyright (C) 2005 JanRain, Inc.
 
 require_once('Action.class.php');
 
+
+/**
+ * Provide an XML document with server data necessary to proceed with the
+ * authetication process.
+ * 
+ * This action is usually reached from the user provided identity URL (the one
+ * we get from IdentityPage, at the "<link rel='openid.server' />".
+ */
 class XRDS extends Action
 {
 	function process($method, &$request)

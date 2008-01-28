@@ -20,6 +20,9 @@ Copyright (C) 2005 JanRain, Inc.
 require_once('Action.class.php');
 require_once('common/HTTP.class.php');
 
+/**
+ * Provide the URL the user provides to the application when authenticating.
+ */
 class IdentityPage extends Action
 {	
 	function process($method, &$request)

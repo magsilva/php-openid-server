@@ -19,6 +19,7 @@ Copyright (C) 2005 JanRain, Inc.
 
 require_once('Action.class.php');
 
+
 class Login extends Action
 {
 	function process($method, &$request)
